@@ -14,11 +14,11 @@ public class CartFrame extends JFrame {
     private DecimalFormat priceFormat;
     private JPanel cartItemsPanel;
     private JLabel totalPriceLabel;
-    
+
     public CartFrame() {
         this.cartService = CartService.getInstance();
         this.priceFormat = new DecimalFormat("$0.00");
-        
+
         setTitle("Cart");
         setSize(1920, 1080);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -29,17 +29,17 @@ public class CartFrame extends JFrame {
 
         // Add navbar
         add(createNavBar(), BorderLayout.NORTH);
-        
+
         // Main content
         JPanel contentPanel = new JPanel(new BorderLayout());
         contentPanel.setBackground(Color.WHITE);
-        
+
         JLabel title = new JLabel("Shopping Cart", SwingConstants.CENTER);
         title.setFont(new Font("SansSerif", Font.BOLD, 48));
         title.setForeground(new Color(0, 100, 0));
         title.setBorder(BorderFactory.createEmptyBorder(40, 0, 40, 0));
         contentPanel.add(title, BorderLayout.NORTH);
-        
+
         // Cart content
         createCartContent();
         JScrollPane scrollPane = new JScrollPane(cartItemsPanel);
@@ -47,43 +47,43 @@ public class CartFrame extends JFrame {
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         scrollPane.setBorder(null);
-        
+
         contentPanel.add(scrollPane, BorderLayout.CENTER);
-        
+
         // Total and checkout section
         JPanel bottomPanel = createBottomPanel();
         contentPanel.add(bottomPanel, BorderLayout.SOUTH);
-        
+
         add(contentPanel, BorderLayout.CENTER);
-        
+
         refreshCartDisplay();
     }
-    
+
     private void createCartContent() {
         cartItemsPanel = new JPanel();
         cartItemsPanel.setLayout(new BoxLayout(cartItemsPanel, BoxLayout.Y_AXIS));
         cartItemsPanel.setBackground(Color.WHITE);
         cartItemsPanel.setBorder(BorderFactory.createEmptyBorder(20, 100, 20, 100));
     }
-    
+
     private JPanel createBottomPanel() {
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.setBackground(Color.WHITE);
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(20, 100, 50, 100));
-        
+
         // Total section
         JPanel totalPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         totalPanel.setBackground(Color.WHITE);
-        
+
         totalPriceLabel = new JLabel("Total: $0.00");
         totalPriceLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
         totalPriceLabel.setForeground(new Color(0, 100, 0));
         totalPanel.add(totalPriceLabel);
-        
+
         // Buttons panel
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 0));
         buttonsPanel.setBackground(Color.WHITE);
-        
+
         RoundedButton clearCartBtn = new RoundedButton("Clear Cart", 25);
         clearCartBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
         clearCartBtn.setBackground(new Color(255, 200, 200));
@@ -91,7 +91,7 @@ public class CartFrame extends JFrame {
         clearCartBtn.setHoverColor(new Color(240, 180, 180));
         clearCartBtn.setPreferredSize(new Dimension(120, 40));
         clearCartBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
+
         clearCartBtn.addActionListener(e -> {
             int response = JOptionPane.showConfirmDialog(this,
                 "Are you sure you want to clear the cart?",
@@ -103,7 +103,7 @@ public class CartFrame extends JFrame {
                 JOptionPane.showMessageDialog(this, "Cart cleared!", "Success", JOptionPane.INFORMATION_MESSAGE);
             }
         });
-        
+
         RoundedButton checkoutBtn = new RoundedButton("Checkout", 25);
         checkoutBtn.setFont(new Font("SansSerif", Font.BOLD, 14));
         checkoutBtn.setBackground(new Color(200, 255, 200));
@@ -111,31 +111,31 @@ public class CartFrame extends JFrame {
         checkoutBtn.setHoverColor(new Color(180, 240, 180));
         checkoutBtn.setPreferredSize(new Dimension(120, 40));
         checkoutBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
+
         checkoutBtn.addActionListener(e -> {
             if (cartService.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Your cart is empty!", "Empty Cart", JOptionPane.WARNING_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(this, 
+                JOptionPane.showMessageDialog(this,
                     "Checkout functionality coming soon!\\nTotal: " + priceFormat.format(cartService.getTotalPrice()),
                     "Checkout", JOptionPane.INFORMATION_MESSAGE);
             }
         });
-        
+
         buttonsPanel.add(clearCartBtn);
         buttonsPanel.add(checkoutBtn);
-        
+
         bottomPanel.add(totalPanel, BorderLayout.NORTH);
         bottomPanel.add(buttonsPanel, BorderLayout.SOUTH);
-        
+
         return bottomPanel;
     }
-    
+
     private void refreshCartDisplay() {
         cartItemsPanel.removeAll();
-        
+
         List<CartItem> items = cartService.getCartItems();
-        
+
         if (items.isEmpty()) {
             JLabel emptyLabel = new JLabel("Your cart is empty", SwingConstants.CENTER);
             emptyLabel.setFont(new Font("SansSerif", Font.ITALIC, 24));
@@ -149,14 +149,14 @@ public class CartFrame extends JFrame {
                 cartItemsPanel.add(Box.createRigidArea(new Dimension(0, 15)));
             }
         }
-        
+
         // Update total price
         totalPriceLabel.setText("Total: " + priceFormat.format(cartService.getTotalPrice()));
-        
+
         cartItemsPanel.revalidate();
         cartItemsPanel.repaint();
     }
-    
+
     private JPanel createCartItemPanel(CartItem item) {
         JPanel itemPanel = new JPanel(new BorderLayout());
         itemPanel.setBackground(Color.WHITE);
@@ -165,38 +165,38 @@ public class CartFrame extends JFrame {
             BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
         itemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
-        
+
         // Product image
         JLabel imageLabel = createCartImageLabel(item.getProduct().getImagePath());
         imageLabel.setPreferredSize(new Dimension(80, 80));
         imageLabel.setBackground(new Color(245, 245, 245));
         imageLabel.setOpaque(true);
         imageLabel.setBorder(new RoundedBorder(8, new Color(220, 220, 220), 1));
-        
+
         // Product info
         JPanel infoPanel = new JPanel(new BorderLayout());
         infoPanel.setBackground(Color.WHITE);
         infoPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
-        
+
         JLabel nameLabel = new JLabel(item.getProduct().getName());
         nameLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
-        
+
         JLabel priceLabel = new JLabel(priceFormat.format(item.getProduct().getPrice()) + " each");
         priceLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
         priceLabel.setForeground(Color.GRAY);
-        
+
         JLabel totalLabel = new JLabel("Total: " + priceFormat.format(item.getTotalPrice()));
         totalLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
         totalLabel.setForeground(new Color(0, 100, 0));
-        
+
         infoPanel.add(nameLabel, BorderLayout.NORTH);
         infoPanel.add(priceLabel, BorderLayout.CENTER);
         infoPanel.add(totalLabel, BorderLayout.SOUTH);
-        
+
         // Quantity controls
         JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         controlsPanel.setBackground(Color.WHITE);
-        
+
         RoundedButton decreaseBtn = new RoundedButton("-", 15);
         decreaseBtn.setFont(new Font("SansSerif", Font.BOLD, 16));
         decreaseBtn.setPreferredSize(new Dimension(40, 30));
@@ -204,12 +204,12 @@ public class CartFrame extends JFrame {
         decreaseBtn.setForeground(new Color(150, 0, 0));
         decreaseBtn.setHoverColor(new Color(240, 180, 180));
         decreaseBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
+
         JLabel quantityLabel = new JLabel(String.valueOf(item.getQuantity()));
         quantityLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
         quantityLabel.setPreferredSize(new Dimension(30, 30));
         quantityLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        
+
         RoundedButton increaseBtn = new RoundedButton("+", 15);
         increaseBtn.setFont(new Font("SansSerif", Font.BOLD, 16));
         increaseBtn.setPreferredSize(new Dimension(40, 30));
@@ -217,7 +217,7 @@ public class CartFrame extends JFrame {
         increaseBtn.setForeground(new Color(0, 120, 0));
         increaseBtn.setHoverColor(new Color(180, 240, 180));
         increaseBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
+
         RoundedButton removeBtn = new RoundedButton("Remove", 15);
         removeBtn.setFont(new Font("SansSerif", Font.PLAIN, 12));
         removeBtn.setBackground(new Color(255, 200, 200));
@@ -225,7 +225,7 @@ public class CartFrame extends JFrame {
         removeBtn.setHoverColor(new Color(240, 180, 180));
         removeBtn.setPreferredSize(new Dimension(70, 30));
         removeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
+
         // Add action listeners
         decreaseBtn.addActionListener(e -> {
             if (item.getQuantity() > 1) {
@@ -233,30 +233,30 @@ public class CartFrame extends JFrame {
                 refreshCartDisplay();
             }
         });
-        
+
         increaseBtn.addActionListener(e -> {
             cartService.updateQuantity(item.getProduct(), item.getQuantity() + 1);
             refreshCartDisplay();
         });
-        
+
         removeBtn.addActionListener(e -> {
             cartService.removeFromCart(item.getProduct());
             refreshCartDisplay();
         });
-        
+
         controlsPanel.add(decreaseBtn);
         controlsPanel.add(quantityLabel);
         controlsPanel.add(increaseBtn);
         controlsPanel.add(Box.createRigidArea(new Dimension(20, 0)));
         controlsPanel.add(removeBtn);
-        
+
         itemPanel.add(imageLabel, BorderLayout.WEST);
         itemPanel.add(infoPanel, BorderLayout.CENTER);
         itemPanel.add(controlsPanel, BorderLayout.EAST);
-        
+
         return itemPanel;
     }
-    
+
     private JPanel createNavBar() {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(Color.WHITE);
@@ -283,7 +283,7 @@ public class CartFrame extends JFrame {
                 public void mouseExited(MouseEvent e) {
                     link.setForeground(new Color(34, 139, 34));
                 }
-                
+
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     navigateToPage(item);
@@ -326,7 +326,7 @@ public class CartFrame extends JFrame {
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE
                 );
-                
+
                 if (response == JOptionPane.YES_OPTION) {
                     SignupFrame.getUserService().logout();
                     JOptionPane.showMessageDialog(CartFrame.this,
@@ -349,10 +349,10 @@ public class CartFrame extends JFrame {
 
         header.add(navPanel, BorderLayout.WEST);
         header.add(rightPanel, BorderLayout.EAST);
-        
+
         return header;
     }
-    
+
     private void navigateToPage(String pageName) {
         SwingUtilities.invokeLater(() -> {
             switch (pageName) {
@@ -380,11 +380,11 @@ public class CartFrame extends JFrame {
 
     private JLabel createCartImageLabel(String imagePath) {
         JLabel label = new JLabel("", SwingConstants.CENTER);
-        
+
         try {
             // Try to load the image
             ImageIcon icon = new ImageIcon(imagePath);
-            
+
             // Check if image loaded successfully
             if (icon.getIconWidth() > 0) {
                 // Scale the image to fit cart item size
@@ -401,7 +401,7 @@ public class CartFrame extends JFrame {
             label.setText("📦");
             label.setFont(new Font("SansSerif", Font.PLAIN, 30));
         }
-        
+
         return label;
     }
 
