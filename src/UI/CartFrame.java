@@ -46,11 +46,12 @@ public class CartFrame extends JFrame {
         mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 60, 30, 60));
 
         // Back to Home button
-        RoundedButton backButton = new RoundedButton("Back to Home", 10);
+        RoundedButton backButton = new RoundedButton("← Back to Shop", 25);
         backButton.setFont(new Font("SansSerif", Font.BOLD, 14));
-        backButton.setBackground(new Color(0, 128, 0));
+        backButton.setBackground(new Color(34, 139, 34));
         backButton.setForeground(Color.WHITE);
-        backButton.setPreferredSize(new Dimension(140, 40));
+        backButton.setHoverColor(new Color(46, 160, 46));
+        backButton.setPreferredSize(new Dimension(160, 45));
         backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backButton.addActionListener(e -> {
             new ElectronicsFrame().setVisible(true);
@@ -120,15 +121,16 @@ public class CartFrame extends JFrame {
     private JPanel createCardDetailsPanel() {
         JPanel outerPanel = new JPanel(new BorderLayout());
         outerPanel.setBackground(Color.WHITE);
+        outerPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
         
         JPanel cardPanel = new JPanel();
         cardPanel.setLayout(new BoxLayout(cardPanel, BoxLayout.Y_AXIS));
-        cardPanel.setBackground(new Color(0, 153, 76));
+        cardPanel.setBackground(new Color(34, 139, 34));
         cardPanel.setBorder(BorderFactory.createCompoundBorder(
-            new styles.RoundedBorder(20, new Color(0, 153, 76), 0),
-            BorderFactory.createEmptyBorder(35, 35, 35, 35)
+            new styles.RoundedBorder(25, new Color(34, 139, 34), 0),
+            BorderFactory.createEmptyBorder(40, 40, 40, 40)
         ));
-        cardPanel.setPreferredSize(new Dimension(420, 700));
+        cardPanel.setPreferredSize(new Dimension(440, 720));
         
         outerPanel.add(cardPanel, BorderLayout.CENTER);
 
@@ -142,15 +144,15 @@ public class CartFrame extends JFrame {
 
         // Card type label
         JLabel cardTypeLabel = new JLabel("Card type");
-        cardTypeLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        cardTypeLabel.setForeground(Color.WHITE);
+        cardTypeLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        cardTypeLabel.setForeground(new Color(230, 255, 230));
         cardTypeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         cardPanel.add(cardTypeLabel);
-        cardPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        cardPanel.add(Box.createRigidArea(new Dimension(0, 12)));
 
         // Card logos panel
         JPanel logosPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 0));
-        logosPanel.setBackground(new Color(0, 153, 76));
+        logosPanel.setBackground(new Color(34, 139, 34));
         logosPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel mastercard = createCardImageLabel("images/MasterCard.png", 70, 45);
@@ -189,39 +191,39 @@ public class CartFrame extends JFrame {
 
         // Expiration date and CVV row
         JPanel dateRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        dateRow.setBackground(new Color(0, 153, 76));
+        dateRow.setBackground(new Color(34, 139, 34));
         dateRow.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JPanel expPanel = new JPanel();
         expPanel.setLayout(new BoxLayout(expPanel, BoxLayout.Y_AXIS));
-        expPanel.setBackground(new Color(0, 153, 76));
+        expPanel.setBackground(new Color(34, 139, 34));
 
         JLabel expLabel = new JLabel("Expiration date");
-        expLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        expLabel.setForeground(Color.WHITE);
+        expLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        expLabel.setForeground(new Color(230, 255, 230));
         expLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         expPanel.add(expLabel);
-        expPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+        expPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         JTextField expField = createGreenTextField("mm/yy");
-        expField.setPreferredSize(new Dimension(150, 38));
-        expField.setMaximumSize(new Dimension(150, 38));
+        expField.setPreferredSize(new Dimension(160, 45));
+        expField.setMaximumSize(new Dimension(160, 45));
         expPanel.add(expField);
 
         JPanel cvvPanel = new JPanel();
         cvvPanel.setLayout(new BoxLayout(cvvPanel, BoxLayout.Y_AXIS));
-        cvvPanel.setBackground(new Color(0, 153, 76));
+        cvvPanel.setBackground(new Color(34, 139, 34));
 
         JLabel cvvLabel = new JLabel("CVV");
-        cvvLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        cvvLabel.setForeground(Color.WHITE);
+        cvvLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        cvvLabel.setForeground(new Color(230, 255, 230));
         cvvLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         cvvPanel.add(cvvLabel);
-        cvvPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+        cvvPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         JTextField cvvField = createGreenTextField("123");
-        cvvField.setPreferredSize(new Dimension(150, 38));
-        cvvField.setMaximumSize(new Dimension(150, 38));
+        cvvField.setPreferredSize(new Dimension(160, 45));
+        cvvField.setMaximumSize(new Dimension(160, 45));
         cvvPanel.add(cvvField);
 
         dateRow.add(expPanel);
@@ -232,54 +234,54 @@ public class CartFrame extends JFrame {
 
         // Subtotal
         JPanel subtotalPanel = new JPanel(new BorderLayout());
-        subtotalPanel.setBackground(new Color(0, 153, 76));
+        subtotalPanel.setBackground(new Color(34, 139, 34));
         subtotalPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        subtotalPanel.setMaximumSize(new Dimension(350, 25));
+        subtotalPanel.setMaximumSize(new Dimension(360, 28));
 
         JLabel subtotalLabelText = new JLabel("Subtotal");
-        subtotalLabelText.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        subtotalLabelText.setForeground(Color.WHITE);
+        subtotalLabelText.setFont(new Font("SansSerif", Font.PLAIN, 15));
+        subtotalLabelText.setForeground(new Color(230, 255, 230));
 
         subtotalLabel = new JLabel("$0");
-        subtotalLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        subtotalLabel.setFont(new Font("SansSerif", Font.BOLD, 15));
         subtotalLabel.setForeground(Color.WHITE);
 
         subtotalPanel.add(subtotalLabelText, BorderLayout.WEST);
         subtotalPanel.add(subtotalLabel, BorderLayout.EAST);
         cardPanel.add(subtotalPanel);
-        cardPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+        cardPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         // Shipping
         JPanel shippingPanel = new JPanel(new BorderLayout());
-        shippingPanel.setBackground(new Color(0, 153, 76));
+        shippingPanel.setBackground(new Color(34, 139, 34));
         shippingPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        shippingPanel.setMaximumSize(new Dimension(350, 25));
+        shippingPanel.setMaximumSize(new Dimension(360, 28));
 
         JLabel shippingLabelText = new JLabel("Shipping");
-        shippingLabelText.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        shippingLabelText.setForeground(Color.WHITE);
+        shippingLabelText.setFont(new Font("SansSerif", Font.PLAIN, 15));
+        shippingLabelText.setForeground(new Color(230, 255, 230));
 
         JLabel shippingValue = new JLabel("$4");
-        shippingValue.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        shippingValue.setFont(new Font("SansSerif", Font.BOLD, 15));
         shippingValue.setForeground(Color.WHITE);
 
         shippingPanel.add(shippingLabelText, BorderLayout.WEST);
         shippingPanel.add(shippingValue, BorderLayout.EAST);
         cardPanel.add(shippingPanel);
-        cardPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+        cardPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         // Total (Tax incl.)
         JPanel totalPanel = new JPanel(new BorderLayout());
-        totalPanel.setBackground(new Color(0, 153, 76));
+        totalPanel.setBackground(new Color(34, 139, 34));
         totalPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        totalPanel.setMaximumSize(new Dimension(350, 25));
+        totalPanel.setMaximumSize(new Dimension(360, 28));
 
         JLabel totalLabelText = new JLabel("Total (Tax incl.)");
-        totalLabelText.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        totalLabelText.setFont(new Font("SansSerif", Font.BOLD, 16));
         totalLabelText.setForeground(Color.WHITE);
 
         totalLabel = new JLabel("$4");
-        totalLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        totalLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
         totalLabel.setForeground(Color.WHITE);
 
         totalPanel.add(totalLabelText, BorderLayout.WEST);
@@ -289,21 +291,21 @@ public class CartFrame extends JFrame {
 
         // Checkout button
         JPanel checkoutPanel = new JPanel(new BorderLayout());
-        checkoutPanel.setBackground(new Color(0, 153, 76));
-        checkoutPanel.setMaximumSize(new Dimension(350, 55));
+        checkoutPanel.setBackground(new Color(255, 193, 7));
+        checkoutPanel.setMaximumSize(new Dimension(360, 60));
         checkoutPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         checkoutPanel.setBorder(BorderFactory.createCompoundBorder(
-            new styles.RoundedBorder(12, new Color(0, 153, 76), 0),
-            BorderFactory.createEmptyBorder(15, 20, 15, 20)
+            new styles.RoundedBorder(30, new Color(255, 193, 7), 0),
+            BorderFactory.createEmptyBorder(18, 25, 18, 25)
         ));
 
         checkoutTotalLabel = new JLabel("$4");
-        checkoutTotalLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
-        checkoutTotalLabel.setForeground(Color.WHITE);
+        checkoutTotalLabel.setFont(new Font("SansSerif", Font.BOLD, 19));
+        checkoutTotalLabel.setForeground(new Color(33, 33, 33));
 
         JLabel checkoutText = new JLabel("Checkout →");
-        checkoutText.setFont(new Font("SansSerif", Font.BOLD, 16));
-        checkoutText.setForeground(Color.WHITE);
+        checkoutText.setFont(new Font("SansSerif", Font.BOLD, 17));
+        checkoutText.setForeground(new Color(33, 33, 33));
 
         checkoutPanel.add(checkoutTotalLabel, BorderLayout.WEST);
         checkoutPanel.add(checkoutText, BorderLayout.EAST);
@@ -316,12 +318,12 @@ public class CartFrame extends JFrame {
 
             @Override
             public void mouseEntered(MouseEvent e) {
-                checkoutPanel.setBackground(new Color(0, 176, 88));
+                checkoutPanel.setBackground(new Color(255, 205, 50));
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                checkoutPanel.setBackground(new Color(0, 153, 76));
+                checkoutPanel.setBackground(new Color(255, 193, 7));
             }
         });
 
@@ -366,7 +368,7 @@ public class CartFrame extends JFrame {
                 }
                 // Select this card
                 selectedCardLabel = label;
-                label.setBorder(new styles.RoundedBorder(8, new Color(0, 153, 76), 3));
+                label.setBorder(new styles.RoundedBorder(8, new Color(255, 193, 7), 3));
                 
                 // Determine card type from image path
                 if (imagePath.contains("MasterCard")) {
@@ -384,15 +386,15 @@ public class CartFrame extends JFrame {
 
     private JTextField createGreenTextField(String placeholder) {
         JTextField field = new JTextField(placeholder);
-        field.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        field.setBackground(new Color(0, 176, 88));
+        field.setFont(new Font("SansSerif", Font.PLAIN, 15));
+        field.setBackground(new Color(46, 160, 46));
         field.setForeground(new Color(200, 230, 200));
         field.setCaretColor(Color.WHITE);
         field.setBorder(BorderFactory.createCompoundBorder(
-                new styles.RoundedBorder(8, new Color(0, 176, 88), 0),
-                BorderFactory.createEmptyBorder(10, 15, 10, 15)));
+                new styles.RoundedBorder(12, new Color(46, 160, 46), 0),
+                BorderFactory.createEmptyBorder(12, 18, 12, 18)));
         field.setAlignmentX(Component.LEFT_ALIGNMENT);
-        field.setMaximumSize(new Dimension(350, 45));
+        field.setMaximumSize(new Dimension(360, 48));
 
         // Add focus listener to clear placeholder
         field.addFocusListener(new FocusAdapter() {
@@ -447,20 +449,26 @@ public class CartFrame extends JFrame {
     }
 
     private JPanel createCartItemPanel(CartItem item) {
+        JPanel outerPanel = new JPanel(new BorderLayout());
+        outerPanel.setBackground(Color.WHITE);
+        outerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        outerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 130));
+        
         JPanel itemPanel = new JPanel(new BorderLayout());
         itemPanel.setBackground(Color.WHITE);
         itemPanel.setBorder(BorderFactory.createCompoundBorder(
-            new styles.RoundedBorder(15, new Color(230, 230, 230), 1),
-            BorderFactory.createEmptyBorder(20, 20, 20, 20)
+            new styles.RoundedBorder(20, new Color(220, 220, 220), 1),
+            BorderFactory.createEmptyBorder(25, 25, 25, 25)
         ));
-        itemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
+        
+        outerPanel.add(itemPanel, BorderLayout.CENTER);
 
         // Product image
         JLabel imageLabel = createCartImageLabel(item.getProduct().getImagePath());
-        imageLabel.setPreferredSize(new Dimension(80, 80));
-        imageLabel.setBackground(new Color(248, 248, 248));
+        imageLabel.setPreferredSize(new Dimension(90, 90));
+        imageLabel.setBackground(new Color(250, 250, 250));
         imageLabel.setOpaque(true);
-        imageLabel.setBorder(new styles.RoundedBorder(10, new Color(220, 220, 220), 1));
+        imageLabel.setBorder(new styles.RoundedBorder(15, new Color(200, 200, 200), 1));
 
         // Product info
         JPanel infoPanel = new JPanel();
@@ -469,14 +477,15 @@ public class CartFrame extends JFrame {
         infoPanel.setBorder(BorderFactory.createEmptyBorder(5, 20, 5, 20));
 
         JLabel nameLabel = new JLabel(item.getProduct().getName());
-        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 17));
+        nameLabel.setForeground(new Color(33, 33, 33));
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         infoPanel.add(nameLabel);
-        infoPanel.add(Box.createRigidArea(new Dimension(0, 8)));
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         
-        JLabel unitPriceLabel = new JLabel("Unit: " + priceFormat.format(item.getProduct().getPrice()));
-        unitPriceLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        unitPriceLabel.setForeground(new Color(100, 100, 100));
+        JLabel unitPriceLabel = new JLabel("Unit price: " + priceFormat.format(item.getProduct().getPrice()));
+        unitPriceLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        unitPriceLabel.setForeground(new Color(120, 120, 120));
         unitPriceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         infoPanel.add(unitPriceLabel);
 
@@ -487,16 +496,17 @@ public class CartFrame extends JFrame {
         controlsPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 0));
 
         // Quantity controls
-        JPanel quantityPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        JPanel quantityPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         quantityPanel.setBackground(Color.WHITE);
         quantityPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
-        // Minus button
-        RoundedButton minusBtn = new RoundedButton("-", 8);
-        minusBtn.setFont(new Font("SansSerif", Font.BOLD, 16));
-        minusBtn.setPreferredSize(new Dimension(35, 35));
-        minusBtn.setBackground(new Color(240, 240, 240));
-        minusBtn.setForeground(Color.BLACK);
+        // Minus button - fully rounded
+        RoundedButton minusBtn = new RoundedButton("-", 20);
+        minusBtn.setFont(new Font("SansSerif", Font.BOLD, 18));
+        minusBtn.setPreferredSize(new Dimension(40, 40));
+        minusBtn.setBackground(new Color(245, 245, 245));
+        minusBtn.setForeground(new Color(100, 100, 100));
+        minusBtn.setHoverColor(new Color(230, 230, 230));
         minusBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         minusBtn.addActionListener(e -> {
             if (item.getQuantity() > 1) {
@@ -506,15 +516,17 @@ public class CartFrame extends JFrame {
         });
 
         JLabel quantityNum = new JLabel(String.valueOf(item.getQuantity()));
-        quantityNum.setFont(new Font("SansSerif", Font.BOLD, 16));
-        quantityNum.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
+        quantityNum.setFont(new Font("SansSerif", Font.BOLD, 17));
+        quantityNum.setForeground(new Color(33, 33, 33));
+        quantityNum.setBorder(BorderFactory.createEmptyBorder(0, 18, 0, 18));
 
-        // Plus button
-        RoundedButton plusBtn = new RoundedButton("+", 8);
-        plusBtn.setFont(new Font("SansSerif", Font.BOLD, 16));
-        plusBtn.setPreferredSize(new Dimension(35, 35));
-        plusBtn.setBackground(new Color(0, 128, 0));
+        // Plus button - fully rounded
+        RoundedButton plusBtn = new RoundedButton("+", 20);
+        plusBtn.setFont(new Font("SansSerif", Font.BOLD, 18));
+        plusBtn.setPreferredSize(new Dimension(40, 40));
+        plusBtn.setBackground(new Color(34, 139, 34));
         plusBtn.setForeground(Color.WHITE);
+        plusBtn.setHoverColor(new Color(46, 160, 46));
         plusBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         plusBtn.addActionListener(e -> {
             cartService.updateQuantity(item.getProduct(), item.getQuantity() + 1);
@@ -526,29 +538,35 @@ public class CartFrame extends JFrame {
         quantityPanel.add(plusBtn);
 
         // Total price for this item
-        JPanel pricePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 10));
+        JPanel pricePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 12));
         pricePanel.setBackground(Color.WHITE);
         pricePanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
         
         JLabel totalPriceLabel = new JLabel(priceFormat.format(item.getTotalPrice()));
-        totalPriceLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
-        totalPriceLabel.setForeground(new Color(0, 128, 0));
+        totalPriceLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
+        totalPriceLabel.setForeground(new Color(34, 139, 34));
         pricePanel.add(totalPriceLabel);
 
         // Delete button
-        JPanel deletePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 5));
+        JPanel deletePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 8));
         deletePanel.setBackground(Color.WHITE);
         deletePanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
         
-        RoundedButton deleteBtn = new RoundedButton("Remove", 8);
-        deleteBtn.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        deleteBtn.setPreferredSize(new Dimension(80, 28));
+        RoundedButton deleteBtn = new RoundedButton("Remove", 18);
+        deleteBtn.setFont(new Font("SansSerif", Font.BOLD, 13));
+        deleteBtn.setPreferredSize(new Dimension(90, 35));
         deleteBtn.setBackground(new Color(220, 53, 69));
         deleteBtn.setForeground(Color.WHITE);
+        deleteBtn.setHoverColor(new Color(200, 35, 51));
         deleteBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         deleteBtn.addActionListener(e -> {
-            cartService.removeFromCart(item.getProduct());
-            refreshCartDisplay();
+            int confirm = JOptionPane.showConfirmDialog(CartFrame.this,
+                "Remove " + item.getProduct().getName() + " from cart?",
+                "Confirm Removal", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                cartService.removeFromCart(item.getProduct());
+                refreshCartDisplay();
+            }
         });
         deletePanel.add(deleteBtn);
 
@@ -560,7 +578,7 @@ public class CartFrame extends JFrame {
         itemPanel.add(infoPanel, BorderLayout.CENTER);
         itemPanel.add(controlsPanel, BorderLayout.EAST);
 
-        return itemPanel;
+        return outerPanel;
     }
     
     private void processCheckout() {
