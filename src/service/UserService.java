@@ -69,5 +69,13 @@ public class UserService {
         }
         return false;
     }
+    
+    public boolean isLoggedIn() {
+        return currentUser != null;
+    }
+    
+    public User getCurrentUser() {
+        return currentUser;
+    }
 
 }

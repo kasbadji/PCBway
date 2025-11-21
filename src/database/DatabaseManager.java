@@ -147,6 +147,44 @@ public class DatabaseManager {
     }
     
     /**
+     * Safely insert a document into a collection
+     */
+    public boolean insertDocument(String collectionName, Object document) {
+        if (!isMongoAvailable()) {
+            return false;
+        }
+        
+        try {
+            Object collection = database.getClass().getMethod("getCollection", String.class)
+                .invoke(database, collectionName);
+            
+            // Try insertOne first
+            try {
+                collection.getClass().getMethod("insertOne", Object.class)
+                    .invoke(collection, document);
+                return true;
+            } catch (Exception insertEx) {
+                // Try a basic save-style approach as fallback
+                try {
+                    // Get the collection as BasicDBCollection for save method
+                    Object basicCollection = collection;
+                    basicCollection.getClass().getMethod("save", Object.class)
+                        .invoke(basicCollection, document);
+                    return true;
+                } catch (Exception saveEx) {
+                    System.err.println("MongoDB insert failed - both insertOne and save methods unavailable");
+                    System.err.println("Insert error: " + insertEx.getClass().getSimpleName());
+                    System.err.println("Save error: " + saveEx.getClass().getSimpleName());
+                    return false;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to access MongoDB collection: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Test the connection
      */
     public boolean testConnection() {

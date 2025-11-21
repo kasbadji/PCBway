@@ -21,6 +21,8 @@ public class CartFrame extends JFrame {
     private String selectedCardType = null;
     private JTextField nameField;
     private JTextField cardNumField;
+    private JTextField expField;
+    private JTextField cvvField;
     private User currentUser;
 
     public CartFrame() {
@@ -30,7 +32,7 @@ public class CartFrame extends JFrame {
     public CartFrame(User user) {
         this.currentUser = user;
         this.cartService = CartService.getInstance();
-        this.priceFormat = new DecimalFormat("$#,###");
+        this.priceFormat = new DecimalFormat("$#,##0.00");
 
         setTitle("Shopping Cart");
         setSize(1400, 900);
@@ -46,12 +48,11 @@ public class CartFrame extends JFrame {
         mainPanel.setBorder(BorderFactory.createEmptyBorder(30, 60, 30, 60));
 
         // Back to Home button
-        RoundedButton backButton = new RoundedButton("← Back to Shop", 25);
+        RoundedButton backButton = new RoundedButton("Back to Home", 10);
         backButton.setFont(new Font("SansSerif", Font.BOLD, 14));
-        backButton.setBackground(new Color(34, 139, 34));
+        backButton.setBackground(new Color(0, 128, 0));
         backButton.setForeground(Color.WHITE);
-        backButton.setHoverColor(new Color(46, 160, 46));
-        backButton.setPreferredSize(new Dimension(160, 45));
+        backButton.setPreferredSize(new Dimension(140, 40));
         backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backButton.addActionListener(e -> {
             new ElectronicsFrame().setVisible(true);
@@ -70,7 +71,7 @@ public class CartFrame extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.insets = new Insets(20, 0, 0, 20);
-        gbc.weightx = 0.6;
+        gbc.weightx = 1.0;
         gbc.weighty = 1.0;
 
         // Left column - Shopping cart items
@@ -81,7 +82,9 @@ public class CartFrame extends JFrame {
 
         // Right column - Card details panel
         gbc.gridx = 1;
-        gbc.weightx = 0.4;
+        gbc.weightx = 0.0;
+        gbc.fill = GridBagConstraints.VERTICAL;
+        gbc.anchor = GridBagConstraints.NORTHEAST;
         gbc.insets = new Insets(20, 20, 0, 0);
         JPanel rightColumn = createCardDetailsPanel();
         centerPanel.add(rightColumn, gbc);
@@ -119,20 +122,11 @@ public class CartFrame extends JFrame {
     }
 
     private JPanel createCardDetailsPanel() {
-        JPanel outerPanel = new JPanel(new BorderLayout());
-        outerPanel.setBackground(Color.WHITE);
-        outerPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
-        
         JPanel cardPanel = new JPanel();
         cardPanel.setLayout(new BoxLayout(cardPanel, BoxLayout.Y_AXIS));
-        cardPanel.setBackground(new Color(34, 139, 34));
-        cardPanel.setBorder(BorderFactory.createCompoundBorder(
-            new styles.RoundedBorder(25, new Color(34, 139, 34), 0),
-            BorderFactory.createEmptyBorder(40, 40, 40, 40)
-        ));
-        cardPanel.setPreferredSize(new Dimension(440, 720));
-        
-        outerPanel.add(cardPanel, BorderLayout.CENTER);
+        cardPanel.setBackground(new Color(0, 153, 76));
+        cardPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
+        cardPanel.setPreferredSize(new Dimension(350, 650));
 
         // Title
         JLabel title = new JLabel("Card Details");
@@ -144,15 +138,15 @@ public class CartFrame extends JFrame {
 
         // Card type label
         JLabel cardTypeLabel = new JLabel("Card type");
-        cardTypeLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        cardTypeLabel.setForeground(new Color(230, 255, 230));
+        cardTypeLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        cardTypeLabel.setForeground(Color.WHITE);
         cardTypeLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         cardPanel.add(cardTypeLabel);
-        cardPanel.add(Box.createRigidArea(new Dimension(0, 12)));
+        cardPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         // Card logos panel
         JPanel logosPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 0));
-        logosPanel.setBackground(new Color(34, 139, 34));
+        logosPanel.setBackground(new Color(0, 153, 76));
         logosPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel mastercard = createCardImageLabel("images/MasterCard.png", 70, 45);
@@ -191,39 +185,39 @@ public class CartFrame extends JFrame {
 
         // Expiration date and CVV row
         JPanel dateRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        dateRow.setBackground(new Color(34, 139, 34));
+        dateRow.setBackground(new Color(0, 153, 76));
         dateRow.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JPanel expPanel = new JPanel();
         expPanel.setLayout(new BoxLayout(expPanel, BoxLayout.Y_AXIS));
-        expPanel.setBackground(new Color(34, 139, 34));
+        expPanel.setBackground(new Color(0, 153, 76));
 
         JLabel expLabel = new JLabel("Expiration date");
-        expLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        expLabel.setForeground(new Color(230, 255, 230));
+        expLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        expLabel.setForeground(Color.WHITE);
         expLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         expPanel.add(expLabel);
-        expPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        expPanel.add(Box.createRigidArea(new Dimension(0, 8)));
 
-        JTextField expField = createGreenTextField("mm/yy");
-        expField.setPreferredSize(new Dimension(160, 45));
-        expField.setMaximumSize(new Dimension(160, 45));
+        expField = createGreenTextField("mm/yy");
+        expField.setPreferredSize(new Dimension(150, 38));
+        expField.setMaximumSize(new Dimension(150, 38));
         expPanel.add(expField);
 
         JPanel cvvPanel = new JPanel();
         cvvPanel.setLayout(new BoxLayout(cvvPanel, BoxLayout.Y_AXIS));
-        cvvPanel.setBackground(new Color(34, 139, 34));
+        cvvPanel.setBackground(new Color(0, 153, 76));
 
         JLabel cvvLabel = new JLabel("CVV");
-        cvvLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        cvvLabel.setForeground(new Color(230, 255, 230));
+        cvvLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        cvvLabel.setForeground(Color.WHITE);
         cvvLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         cvvPanel.add(cvvLabel);
-        cvvPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        cvvPanel.add(Box.createRigidArea(new Dimension(0, 8)));
 
-        JTextField cvvField = createGreenTextField("123");
-        cvvField.setPreferredSize(new Dimension(160, 45));
-        cvvField.setMaximumSize(new Dimension(160, 45));
+        cvvField = createGreenTextField("123");
+        cvvField.setPreferredSize(new Dimension(150, 38));
+        cvvField.setMaximumSize(new Dimension(150, 38));
         cvvPanel.add(cvvField);
 
         dateRow.add(expPanel);
@@ -234,54 +228,54 @@ public class CartFrame extends JFrame {
 
         // Subtotal
         JPanel subtotalPanel = new JPanel(new BorderLayout());
-        subtotalPanel.setBackground(new Color(34, 139, 34));
+        subtotalPanel.setBackground(new Color(0, 153, 76));
         subtotalPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        subtotalPanel.setMaximumSize(new Dimension(360, 28));
+        subtotalPanel.setMaximumSize(new Dimension(350, 25));
 
         JLabel subtotalLabelText = new JLabel("Subtotal");
-        subtotalLabelText.setFont(new Font("SansSerif", Font.PLAIN, 15));
-        subtotalLabelText.setForeground(new Color(230, 255, 230));
+        subtotalLabelText.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        subtotalLabelText.setForeground(Color.WHITE);
 
         subtotalLabel = new JLabel("$0");
-        subtotalLabel.setFont(new Font("SansSerif", Font.BOLD, 15));
+        subtotalLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
         subtotalLabel.setForeground(Color.WHITE);
 
         subtotalPanel.add(subtotalLabelText, BorderLayout.WEST);
         subtotalPanel.add(subtotalLabel, BorderLayout.EAST);
         cardPanel.add(subtotalPanel);
-        cardPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        cardPanel.add(Box.createRigidArea(new Dimension(0, 8)));
 
         // Shipping
         JPanel shippingPanel = new JPanel(new BorderLayout());
-        shippingPanel.setBackground(new Color(34, 139, 34));
+        shippingPanel.setBackground(new Color(0, 153, 76));
         shippingPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        shippingPanel.setMaximumSize(new Dimension(360, 28));
+        shippingPanel.setMaximumSize(new Dimension(350, 25));
 
         JLabel shippingLabelText = new JLabel("Shipping");
-        shippingLabelText.setFont(new Font("SansSerif", Font.PLAIN, 15));
-        shippingLabelText.setForeground(new Color(230, 255, 230));
+        shippingLabelText.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        shippingLabelText.setForeground(Color.WHITE);
 
         JLabel shippingValue = new JLabel("$4");
-        shippingValue.setFont(new Font("SansSerif", Font.BOLD, 15));
+        shippingValue.setFont(new Font("SansSerif", Font.PLAIN, 14));
         shippingValue.setForeground(Color.WHITE);
 
         shippingPanel.add(shippingLabelText, BorderLayout.WEST);
         shippingPanel.add(shippingValue, BorderLayout.EAST);
         cardPanel.add(shippingPanel);
-        cardPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        cardPanel.add(Box.createRigidArea(new Dimension(0, 8)));
 
         // Total (Tax incl.)
         JPanel totalPanel = new JPanel(new BorderLayout());
-        totalPanel.setBackground(new Color(34, 139, 34));
+        totalPanel.setBackground(new Color(0, 153, 76));
         totalPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        totalPanel.setMaximumSize(new Dimension(360, 28));
+        totalPanel.setMaximumSize(new Dimension(350, 25));
 
         JLabel totalLabelText = new JLabel("Total (Tax incl.)");
-        totalLabelText.setFont(new Font("SansSerif", Font.BOLD, 16));
+        totalLabelText.setFont(new Font("SansSerif", Font.PLAIN, 14));
         totalLabelText.setForeground(Color.WHITE);
 
         totalLabel = new JLabel("$4");
-        totalLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        totalLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
         totalLabel.setForeground(Color.WHITE);
 
         totalPanel.add(totalLabelText, BorderLayout.WEST);
@@ -291,21 +285,18 @@ public class CartFrame extends JFrame {
 
         // Checkout button
         JPanel checkoutPanel = new JPanel(new BorderLayout());
-        checkoutPanel.setBackground(new Color(255, 193, 7));
-        checkoutPanel.setMaximumSize(new Dimension(360, 60));
+        checkoutPanel.setBackground(new Color(0, 176, 88));
+        checkoutPanel.setMaximumSize(new Dimension(350, 45));
         checkoutPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        checkoutPanel.setBorder(BorderFactory.createCompoundBorder(
-            new styles.RoundedBorder(30, new Color(255, 193, 7), 0),
-            BorderFactory.createEmptyBorder(18, 25, 18, 25)
-        ));
+        checkoutPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
 
         checkoutTotalLabel = new JLabel("$4");
-        checkoutTotalLabel.setFont(new Font("SansSerif", Font.BOLD, 19));
-        checkoutTotalLabel.setForeground(new Color(33, 33, 33));
+        checkoutTotalLabel.setFont(new Font("SansSerif", Font.BOLD, 15));
+        checkoutTotalLabel.setForeground(Color.WHITE);
 
         JLabel checkoutText = new JLabel("Checkout →");
-        checkoutText.setFont(new Font("SansSerif", Font.BOLD, 17));
-        checkoutText.setForeground(new Color(33, 33, 33));
+        checkoutText.setFont(new Font("SansSerif", Font.BOLD, 15));
+        checkoutText.setForeground(Color.WHITE);
 
         checkoutPanel.add(checkoutTotalLabel, BorderLayout.WEST);
         checkoutPanel.add(checkoutText, BorderLayout.EAST);
@@ -318,18 +309,18 @@ public class CartFrame extends JFrame {
 
             @Override
             public void mouseEntered(MouseEvent e) {
-                checkoutPanel.setBackground(new Color(255, 205, 50));
+                checkoutPanel.setBackground(new Color(0, 160, 80));
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                checkoutPanel.setBackground(new Color(255, 193, 7));
+                checkoutPanel.setBackground(new Color(0, 176, 88));
             }
         });
 
         cardPanel.add(checkoutPanel);
 
-        return outerPanel;
+        return cardPanel;
     }
 
     private JLabel createCardImageLabel(String imagePath, int width, int height) {
@@ -337,7 +328,7 @@ public class CartFrame extends JFrame {
         label.setPreferredSize(new Dimension(width, height));
         label.setBackground(Color.WHITE);
         label.setOpaque(true);
-        label.setBorder(new styles.RoundedBorder(8, new Color(200, 200, 200), 2));
+        label.setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
         label.setCursor(new Cursor(Cursor.HAND_CURSOR));
         label.setHorizontalAlignment(SwingConstants.CENTER);
         label.setVerticalAlignment(SwingConstants.CENTER);
@@ -364,13 +355,13 @@ public class CartFrame extends JFrame {
             public void mouseClicked(MouseEvent e) {
                 // Deselect previous card
                 if (selectedCardLabel != null) {
-                    selectedCardLabel.setBorder(new styles.RoundedBorder(8, new Color(200, 200, 200), 2));
+                    selectedCardLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
                 }
                 // Select this card
                 selectedCardLabel = label;
-                label.setBorder(new styles.RoundedBorder(8, new Color(255, 193, 7), 3));
+                label.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
                 
-                // Determine card type from image path
+                // Set card type based on image path
                 if (imagePath.contains("MasterCard")) {
                     selectedCardType = "MasterCard";
                 } else if (imagePath.contains("Visa")) {
@@ -386,15 +377,15 @@ public class CartFrame extends JFrame {
 
     private JTextField createGreenTextField(String placeholder) {
         JTextField field = new JTextField(placeholder);
-        field.setFont(new Font("SansSerif", Font.PLAIN, 15));
-        field.setBackground(new Color(46, 160, 46));
+        field.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        field.setBackground(new Color(0, 176, 88));
         field.setForeground(new Color(200, 230, 200));
         field.setCaretColor(Color.WHITE);
         field.setBorder(BorderFactory.createCompoundBorder(
-                new styles.RoundedBorder(12, new Color(46, 160, 46), 0),
-                BorderFactory.createEmptyBorder(12, 18, 12, 18)));
+                BorderFactory.createLineBorder(new Color(0, 176, 88), 1),
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
         field.setAlignmentX(Component.LEFT_ALIGNMENT);
-        field.setMaximumSize(new Dimension(360, 48));
+        field.setMaximumSize(new Dimension(350, 38));
 
         // Add focus listener to clear placeholder
         field.addFocusListener(new FocusAdapter() {
@@ -416,6 +407,124 @@ public class CartFrame extends JFrame {
         });
 
         return field;
+    }
+
+    private boolean isPlaceholderActive(JTextField field, String placeholder) {
+        return field.getText().equals(placeholder);
+    }
+
+    private void processCheckout() {
+        if (cartService.getCartItems().isEmpty()) {
+            JOptionPane.showMessageDialog(this, 
+                "Your cart is empty. Please add items before checkout.", 
+                "Cart Empty", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String cardName = nameField.getText().trim();
+        String cardNumber = cardNumField.getText().trim().replaceAll("\\s+", "");
+
+        if (cardName.isEmpty() || isPlaceholderActive(nameField, "Name")) {
+            JOptionPane.showMessageDialog(this, 
+                "Please enter the cardholder name.", 
+                "Missing Information", JOptionPane.WARNING_MESSAGE);
+            nameField.requestFocus();
+            return;
+        }
+
+        if (cardNumber.isEmpty() || isPlaceholderActive(cardNumField, "1111 2222 3333 4444")) {
+            JOptionPane.showMessageDialog(this, 
+                "Please enter a valid card number.", 
+                "Missing Information", JOptionPane.WARNING_MESSAGE);
+            cardNumField.requestFocus();
+            return;
+        }
+
+        String expDate = expField.getText().trim();
+        if (expDate.isEmpty() || isPlaceholderActive(expField, "mm/yy")) {
+            JOptionPane.showMessageDialog(this, 
+                "Please enter the expiration date.", 
+                "Missing Information", JOptionPane.WARNING_MESSAGE);
+            expField.requestFocus();
+            return;
+        }
+
+        String cvv = cvvField.getText().trim();
+        if (cvv.isEmpty() || isPlaceholderActive(cvvField, "123")) {
+            JOptionPane.showMessageDialog(this, 
+                "Please enter the CVV code.", 
+                "Missing Information", JOptionPane.WARNING_MESSAGE);
+            cvvField.requestFocus();
+            return;
+        }
+
+        if (selectedCardType == null) {
+            JOptionPane.showMessageDialog(this, 
+                "Please select a card type.", 
+                "Missing Information", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int result = JOptionPane.showConfirmDialog(this,
+            "Proceed with checkout for " + checkoutTotalLabel.getText() + "?",
+            "Confirm Checkout", JOptionPane.YES_NO_OPTION);
+            
+        if (result == JOptionPane.YES_OPTION) {
+            try {
+                String userEmail = (currentUser != null) ? currentUser.getEmail() : "guest@pcbway.com";
+                
+                Object orderService = null;
+                try {
+                    Class<?> orderServiceClass = Class.forName("service.OrderServiceMongo");
+                    orderService = orderServiceClass.getMethod("getInstance").invoke(null);
+                    
+                    Class<?> orderClass = Class.forName("model.Order");
+                    Object order = orderServiceClass.getMethod("createOrder", 
+                        String.class, List.class, String.class, String.class, String.class)
+                        .invoke(orderService, userEmail, cartService.getCartItems(), 
+                              cardName, selectedCardType, cardNumber);
+                    
+                    String orderId = (String) orderClass.getMethod("getOrderId").invoke(order);
+                    
+                    JOptionPane.showMessageDialog(this, 
+                        "Order placed successfully!\\n" +
+                        "Order ID: " + orderId + "\\n" +
+                        "Total: " + checkoutTotalLabel.getText() + "\\n" +
+                        "Payment: " + selectedCardType + " ending in " + cardNumber.substring(Math.max(0, cardNumber.length() - 4)),
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
+                } catch (ClassNotFoundException e) {
+                    Class<?> orderServiceClass = Class.forName("service.OrderService");
+                    orderService = orderServiceClass.getMethod("getInstance").invoke(null);
+                    
+                    Class<?> orderClass = Class.forName("model.Order");
+                    Object order = orderServiceClass.getMethod("createOrder", 
+                        String.class, List.class, String.class, String.class, String.class)
+                        .invoke(orderService, userEmail, cartService.getCartItems(), 
+                              cardName, selectedCardType, cardNumber);
+                    
+                    String orderId = (String) orderClass.getMethod("getOrderId").invoke(order);
+                    
+                    JOptionPane.showMessageDialog(this, 
+                        "Order placed successfully!\\n" +
+                        "Order ID: " + orderId + "\\n" +
+                        "Total: " + checkoutTotalLabel.getText() + "\\n" +
+                        "Payment: " + selectedCardType + " ending in " + cardNumber.substring(Math.max(0, cardNumber.length() - 4)),
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
+                }
+                
+                cartService.clearCart();
+                refreshCartDisplay();
+                
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, 
+                    "Order placed successfully (in-memory)!\\n" +
+                    "Total: " + checkoutTotalLabel.getText(),
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
+                cartService.clearCart();
+                refreshCartDisplay();
+            }
+        }
     }
 
     private void refreshCartDisplay() {
@@ -449,64 +558,59 @@ public class CartFrame extends JFrame {
     }
 
     private JPanel createCartItemPanel(CartItem item) {
-        JPanel outerPanel = new JPanel(new BorderLayout());
-        outerPanel.setBackground(Color.WHITE);
-        outerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        outerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 130));
-        
         JPanel itemPanel = new JPanel(new BorderLayout());
         itemPanel.setBackground(Color.WHITE);
-        itemPanel.setBorder(BorderFactory.createCompoundBorder(
-            new styles.RoundedBorder(20, new Color(220, 220, 220), 1),
-            BorderFactory.createEmptyBorder(25, 25, 25, 25)
-        ));
-        
-        outerPanel.add(itemPanel, BorderLayout.CENTER);
+        itemPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        itemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
 
         // Product image
-        JLabel imageLabel = createCartImageLabel(item.getProduct().getImagePath());
-        imageLabel.setPreferredSize(new Dimension(90, 90));
-        imageLabel.setBackground(new Color(250, 250, 250));
+        JLabel imageLabel = new JLabel();
+        imageLabel.setPreferredSize(new Dimension(70, 70));
+        imageLabel.setBackground(new Color(200, 200, 200));
         imageLabel.setOpaque(true);
-        imageLabel.setBorder(new styles.RoundedBorder(15, new Color(200, 200, 200), 1));
+        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        // Try to load product image
+        try {
+            if (item.getProduct().getImagePath() != null && !item.getProduct().getImagePath().isEmpty()) {
+                ImageIcon icon = new ImageIcon(item.getProduct().getImagePath());
+                if (icon.getIconWidth() > 0) {
+                    Image img = icon.getImage().getScaledInstance(70, 70, Image.SCALE_SMOOTH);
+                    imageLabel.setIcon(new ImageIcon(img));
+                    imageLabel.setOpaque(false);
+                }
+            }
+        } catch (Exception ex) {
+            // Keep default gray background
+        }
 
         // Product info
-        JPanel infoPanel = new JPanel();
-        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        JPanel infoPanel = new JPanel(new BorderLayout());
         infoPanel.setBackground(Color.WHITE);
-        infoPanel.setBorder(BorderFactory.createEmptyBorder(5, 20, 5, 20));
+        infoPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
 
         JLabel nameLabel = new JLabel(item.getProduct().getName());
-        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 17));
-        nameLabel.setForeground(new Color(33, 33, 33));
-        nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        infoPanel.add(nameLabel);
-        infoPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        
-        JLabel unitPriceLabel = new JLabel("Unit price: " + priceFormat.format(item.getProduct().getPrice()));
-        unitPriceLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        unitPriceLabel.setForeground(new Color(120, 120, 120));
-        unitPriceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        infoPanel.add(unitPriceLabel);
+        nameLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        infoPanel.add(nameLabel, BorderLayout.WEST);
 
         // Right controls panel
-        JPanel controlsPanel = new JPanel();
-        controlsPanel.setLayout(new BoxLayout(controlsPanel, BoxLayout.Y_AXIS));
+        JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 20));
         controlsPanel.setBackground(Color.WHITE);
-        controlsPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 0));
 
-        // Quantity controls
-        JPanel quantityPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        quantityPanel.setBackground(Color.WHITE);
-        quantityPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        JLabel quantityNum = new JLabel(String.valueOf(item.getQuantity()));
+        quantityNum.setFont(new Font("SansSerif", Font.PLAIN, 14));
 
-        // Minus button - fully rounded
-        RoundedButton minusBtn = new RoundedButton("-", 20);
+        // Minus button
+        JButton minusBtn = new JButton("-");
         minusBtn.setFont(new Font("SansSerif", Font.BOLD, 18));
-        minusBtn.setPreferredSize(new Dimension(40, 40));
-        minusBtn.setBackground(new Color(245, 245, 245));
-        minusBtn.setForeground(new Color(100, 100, 100));
-        minusBtn.setHoverColor(new Color(230, 230, 230));
+        minusBtn.setPreferredSize(new Dimension(35, 35));
+        minusBtn.setMinimumSize(new Dimension(35, 35));
+        minusBtn.setMaximumSize(new Dimension(35, 35));
+        minusBtn.setMargin(new Insets(0, 0, 0, 0));
+        minusBtn.setBackground(Color.BLACK);
+        minusBtn.setForeground(Color.WHITE);
+        minusBtn.setFocusPainted(false);
+        minusBtn.setBorderPainted(false);
         minusBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         minusBtn.addActionListener(e -> {
             if (item.getQuantity() > 1) {
@@ -515,191 +619,51 @@ public class CartFrame extends JFrame {
             }
         });
 
-        JLabel quantityNum = new JLabel(String.valueOf(item.getQuantity()));
-        quantityNum.setFont(new Font("SansSerif", Font.BOLD, 17));
-        quantityNum.setForeground(new Color(33, 33, 33));
-        quantityNum.setBorder(BorderFactory.createEmptyBorder(0, 18, 0, 18));
-
-        // Plus button - fully rounded
-        RoundedButton plusBtn = new RoundedButton("+", 20);
+        // Plus button
+        JButton plusBtn = new JButton("+");
         plusBtn.setFont(new Font("SansSerif", Font.BOLD, 18));
-        plusBtn.setPreferredSize(new Dimension(40, 40));
-        plusBtn.setBackground(new Color(34, 139, 34));
+        plusBtn.setPreferredSize(new Dimension(35, 35));
+        plusBtn.setMinimumSize(new Dimension(35, 35));
+        plusBtn.setMaximumSize(new Dimension(35, 35));
+        plusBtn.setMargin(new Insets(0, 0, 0, 0));
+        plusBtn.setBackground(Color.BLACK);
         plusBtn.setForeground(Color.WHITE);
-        plusBtn.setHoverColor(new Color(46, 160, 46));
+        plusBtn.setFocusPainted(false);
+        plusBtn.setBorderPainted(false);
         plusBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         plusBtn.addActionListener(e -> {
             cartService.updateQuantity(item.getProduct(), item.getQuantity() + 1);
             refreshCartDisplay();
         });
 
-        quantityPanel.add(minusBtn);
-        quantityPanel.add(quantityNum);
-        quantityPanel.add(plusBtn);
+        // Price label
+        JLabel priceLabel = new JLabel(priceFormat.format(item.getProduct().getPrice()));
+        priceLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
 
-        // Total price for this item
-        JPanel pricePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 12));
-        pricePanel.setBackground(Color.WHITE);
-        pricePanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
-        
-        JLabel totalPriceLabel = new JLabel(priceFormat.format(item.getTotalPrice()));
-        totalPriceLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
-        totalPriceLabel.setForeground(new Color(34, 139, 34));
-        pricePanel.add(totalPriceLabel);
-
-        // Delete button
-        JPanel deletePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 8));
-        deletePanel.setBackground(Color.WHITE);
-        deletePanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
-        
-        RoundedButton deleteBtn = new RoundedButton("Remove", 18);
-        deleteBtn.setFont(new Font("SansSerif", Font.BOLD, 13));
-        deleteBtn.setPreferredSize(new Dimension(90, 35));
-        deleteBtn.setBackground(new Color(220, 53, 69));
-        deleteBtn.setForeground(Color.WHITE);
-        deleteBtn.setHoverColor(new Color(200, 35, 51));
-        deleteBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        deleteBtn.addActionListener(e -> {
-            int confirm = JOptionPane.showConfirmDialog(CartFrame.this,
-                "Remove " + item.getProduct().getName() + " from cart?",
-                "Confirm Removal", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
+        // Delete icon (red trash)
+        JLabel deleteLabel = new JLabel("🗑");
+        deleteLabel.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        deleteLabel.setForeground(Color.RED);
+        deleteLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        deleteLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
                 cartService.removeFromCart(item.getProduct());
                 refreshCartDisplay();
             }
         });
-        deletePanel.add(deleteBtn);
 
-        controlsPanel.add(quantityPanel);
-        controlsPanel.add(pricePanel);
-        controlsPanel.add(deletePanel);
+        controlsPanel.add(quantityNum);
+        controlsPanel.add(minusBtn);
+        controlsPanel.add(plusBtn);
+        controlsPanel.add(priceLabel);
+        controlsPanel.add(deleteLabel);
 
         itemPanel.add(imageLabel, BorderLayout.WEST);
         itemPanel.add(infoPanel, BorderLayout.CENTER);
         itemPanel.add(controlsPanel, BorderLayout.EAST);
 
-        return outerPanel;
-    }
-    
-    private void processCheckout() {
-        if (cartService.getCartItems().isEmpty()) {
-            JOptionPane.showMessageDialog(this, 
-                "Your cart is empty. Please add items before checkout.", 
-                "Cart Empty", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        String cardName = nameField.getText().trim();
-        String cardNumber = cardNumField.getText().trim().replaceAll("\\s+", "");
-
-        if (cardName.isEmpty() || cardName.equals("Name")) {
-            JOptionPane.showMessageDialog(this, 
-                "Please enter the cardholder name.", 
-                "Missing Information", JOptionPane.WARNING_MESSAGE);
-            nameField.requestFocus();
-            return;
-        }
-
-        if (cardNumber.isEmpty() || cardNumber.equals("1111222233334444")) {
-            JOptionPane.showMessageDialog(this, 
-                "Please enter a valid card number.", 
-                "Missing Information", JOptionPane.WARNING_MESSAGE);
-            cardNumField.requestFocus();
-            return;
-        }
-
-        if (selectedCardType == null) {
-            JOptionPane.showMessageDialog(this, 
-                "Please select a card type.", 
-                "Missing Information", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        int result = JOptionPane.showConfirmDialog(this,
-            "Proceed with checkout for " + checkoutTotalLabel.getText() + "?",
-            "Confirm Checkout", JOptionPane.YES_NO_OPTION);
-            
-        if (result == JOptionPane.YES_OPTION) {
-            try {
-                String userEmail = (currentUser != null) ? currentUser.getEmail() : "guest@pcbway.com";
-                
-                // Try to use MongoDB service first
-                Object orderService = null;
-                try {
-                    Class<?> orderServiceClass = Class.forName("service.OrderServiceMongo");
-                    orderService = orderServiceClass.getMethod("getInstance").invoke(null);
-                    
-                    Class<?> orderClass = Class.forName("model.Order");
-                    Object order = orderServiceClass.getMethod("createOrder", 
-                        String.class, List.class, String.class, String.class, String.class)
-                        .invoke(orderService, userEmail, cartService.getCartItems(), 
-                              cardName, selectedCardType, cardNumber);
-                    
-                    String orderId = (String) orderClass.getMethod("getOrderId").invoke(order);
-                    
-                    JOptionPane.showMessageDialog(this, 
-                        "Order placed successfully!\n" +
-                        "Order ID: " + orderId + "\n" +
-                        "Total: " + checkoutTotalLabel.getText() + "\n" +
-                        "Payment: " + selectedCardType + " ending in " + cardNumber.substring(Math.max(0, cardNumber.length() - 4)),
-                        "Success", JOptionPane.INFORMATION_MESSAGE);
-                } catch (ClassNotFoundException e) {
-                    // MongoDB not available, use in-memory service
-                    Class<?> orderServiceClass = Class.forName("service.OrderService");
-                    orderService = orderServiceClass.getMethod("getInstance").invoke(null);
-                    
-                    Class<?> orderClass = Class.forName("model.Order");
-                    Object order = orderServiceClass.getMethod("createOrder", 
-                        String.class, List.class, String.class, String.class, String.class)
-                        .invoke(orderService, userEmail, cartService.getCartItems(), 
-                              cardName, selectedCardType, cardNumber);
-                    
-                    String orderId = (String) orderClass.getMethod("getOrderId").invoke(order);
-                    
-                    JOptionPane.showMessageDialog(this, 
-                        "Order placed successfully!\n" +
-                        "Order ID: " + orderId + "\n" +
-                        "Total: " + checkoutTotalLabel.getText() + "\n" +
-                        "Payment: " + selectedCardType + " ending in " + cardNumber.substring(Math.max(0, cardNumber.length() - 4)),
-                        "Success", JOptionPane.INFORMATION_MESSAGE);
-                }
-                
-                cartService.clearCart();
-                refreshCartDisplay();
-                
-            } catch (Exception ex) {
-                System.err.println("Error processing checkout: " + ex.getMessage());
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, 
-                    "Order placed successfully (in-memory)!\n" +
-                    "Total: " + checkoutTotalLabel.getText(),
-                    "Success", JOptionPane.INFORMATION_MESSAGE);
-                cartService.clearCart();
-                refreshCartDisplay();
-            }
-        }
-    }
-
-    private JLabel createCartImageLabel(String imagePath) {
-        JLabel label = new JLabel("", SwingConstants.CENTER);
-        
-        try {
-            ImageIcon icon = new ImageIcon(imagePath);
-            
-            if (icon.getIconWidth() > 0) {
-                Image img = icon.getImage();
-                Image scaledImg = img.getScaledInstance(70, 70, Image.SCALE_SMOOTH);
-                label.setIcon(new ImageIcon(scaledImg));
-            } else {
-                label.setText("📦");
-                label.setFont(new Font("SansSerif", Font.PLAIN, 30));
-            }
-        } catch (Exception e) {
-            label.setText("📦");
-            label.setFont(new Font("SansSerif", Font.PLAIN, 30));
-        }
-        
-        return label;
+        return itemPanel;
     }
 
     public static void main(String[] args) {

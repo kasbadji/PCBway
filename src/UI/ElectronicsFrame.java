@@ -248,13 +248,46 @@ public class ElectronicsFrame extends JFrame {
             }
         });
 
+        // Profile button
+        JLabel profileIcon = new JLabel("👤 Profile");
+        profileIcon.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        profileIcon.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        profileIcon.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (SignupFrame.getUserService().isLoggedIn()) {
+                    new ProfileFrame(SignupFrame.getUserService().getCurrentUser()).setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(ElectronicsFrame.this,
+                        "Please login to access your profile.",
+                        "Login Required",
+                        JOptionPane.WARNING_MESSAGE);
+                    new LoginFrame().setVisible(true);
+                }
+            }
+            
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                profileIcon.setForeground(new Color(0, 100, 0));
+            }
+            
+            @Override
+            public void mouseExited(MouseEvent e) {
+                profileIcon.setForeground(Color.BLACK);
+            }
+        });
+
         cartCountLabel = new JLabel("🛒(0)");
         cartCountLabel.setFont(new Font("SansSerif", Font.PLAIN, 18));
         cartCountLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
         cartCountLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                new CartFrame().setVisible(true);
+                if (SignupFrame.getUserService().isLoggedIn()) {
+                    new CartFrame(SignupFrame.getUserService().getCurrentUser()).setVisible(true);
+                } else {
+                    new CartFrame().setVisible(true);
+                }
                 dispose();
             }
             
@@ -271,6 +304,7 @@ public class ElectronicsFrame extends JFrame {
 
         rightPanel.add(searchField);
         rightPanel.add(userIcon);
+        rightPanel.add(profileIcon);
         rightPanel.add(cartCountLabel);
 
         header.add(navPanel, BorderLayout.WEST);
