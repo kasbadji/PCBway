@@ -3,9 +3,16 @@ package UI;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.net.URL;
+import java.net.HttpURLConnection;
+import java.io.OutputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import styles.RoundedBorder;
 
 public class ContactFrame extends JFrame {
+    
     public ContactFrame() {
         setTitle("Contact");
         setSize(1920, 1080); 
@@ -182,21 +189,12 @@ public class ContactFrame extends JFrame {
                 return;
             }
 
-            // Si tous les champs sont valides
-            JOptionPane.showMessageDialog(this,
-                    "Message sent successfully!",
-                    "Success",
-                    JOptionPane.INFORMATION_MESSAGE);
-
-            // Réinitialiser les champs après l'envoi
-            nameField.setText("Value");
-            nameField.setForeground(Color.LIGHT_GRAY);
-            surnameField.setText("Value");
-            surnameField.setForeground(Color.LIGHT_GRAY);
-            emailField.setText("Value");
-            emailField.setForeground(Color.LIGHT_GRAY);
-            messageArea.setText("Value");
-            messageArea.setForeground(Color.LIGHT_GRAY);
+            // Disable button while sending
+            submitButton.setEnabled(false);
+            submitButton.setText("Sending...");
+            
+            // Send email via API
+            sendEmailToAPI(email, message, submitButton, nameField, surnameField, emailField, messageArea);
         });
 
         // Add components with spacing réduit
@@ -399,5 +397,102 @@ public class ContactFrame extends JFrame {
         SwingUtilities.invokeLater(() -> {
             new ContactFrame().setVisible(true);
         });
+    }
+    
+    private void sendEmailToAPI(String email, String message, JButton submitButton, 
+                               JTextField nameField, JTextField surnameField, 
+                               JTextField emailField, JTextArea messageArea) {
+        new Thread(() -> {
+            try {
+                // Create JSON payload
+                String jsonPayload = String.format(
+                    "{\"email\":\"%s\",\"message\":\"%s\"}",
+                    email.replace("\"", "\\\""),
+                    message.replace("\"", "\\\"").replace("\n", "\\n")
+                );
+                
+                System.out.println("Sending email API request...");
+                System.out.println("URL: http://localhost:3000/api/email/send");
+                System.out.println("JSON Payload: " + jsonPayload);
+                
+                // Use URLConnection instead of HttpClient
+                URL url = new URL("http://localhost:3000/api/email/send");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Accept", "application/json");
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(10000); // 10 seconds
+                conn.setReadTimeout(30000); // 30 seconds
+                
+                // Send JSON data
+                try (OutputStream os = conn.getOutputStream()) {
+                    byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
+                    os.write(input, 0, input.length);
+                }
+                
+                // Read response
+                int responseCode = conn.getResponseCode();
+                String responseBody = "";
+                
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(
+                        responseCode >= 200 && responseCode < 300 ? conn.getInputStream() : conn.getErrorStream(),
+                        StandardCharsets.UTF_8))) {
+                    StringBuilder response = new StringBuilder();
+                    String responseLine;
+                    while ((responseLine = br.readLine()) != null) {
+                        response.append(responseLine.trim());
+                    }
+                    responseBody = response.toString();
+                }
+                
+                System.out.println("Response received:");
+                System.out.println("Status Code: " + responseCode);
+                System.out.println("Response Body: " + responseBody);
+                
+                SwingUtilities.invokeLater(() -> {
+                    submitButton.setEnabled(true);
+                    submitButton.setText("Submit");
+                    
+                    if (responseCode == 200) {
+                        // Success
+                        JOptionPane.showMessageDialog(this,
+                            "Message sent successfully!",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
+                        
+                        // Reset form
+                        nameField.setText("Value");
+                        nameField.setForeground(Color.LIGHT_GRAY);
+                        surnameField.setText("Value");
+                        surnameField.setForeground(Color.LIGHT_GRAY);
+                        emailField.setText("Value");
+                        emailField.setForeground(Color.LIGHT_GRAY);
+                        messageArea.setText("Value");
+                        messageArea.setForeground(Color.LIGHT_GRAY);
+                    } else {
+                        // API error
+                        JOptionPane.showMessageDialog(this,
+                            "Failed to send message. Server responded with: " + responseCode,
+                            "Send Failed",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+                
+            } catch (Exception e) {
+                System.out.println("Exception in HTTP request: " + e.getMessage());
+                e.printStackTrace();
+                
+                SwingUtilities.invokeLater(() -> {
+                    submitButton.setEnabled(true);
+                    submitButton.setText("Submit");
+                    
+                    JOptionPane.showMessageDialog(this,
+                        "Failed to send message. Error: " + e.getMessage(),
+                        "Connection Error",
+                        JOptionPane.ERROR_MESSAGE);
+                });
+            }
+        }).start();
     }
 }

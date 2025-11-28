@@ -264,20 +264,11 @@ public class PcbPrinting extends JFrame {
         
         addToCartBtn.addActionListener(e -> addToCart());
         
-        RoundedButton orderNowBtn = new RoundedButton("🚀 Order Now", 25);
-        orderNowBtn.setFont(new Font("SansSerif", Font.BOLD, 16));
-        orderNowBtn.setBackground(new Color(180, 240, 180));
-        orderNowBtn.setForeground(new Color(0, 100, 0));
-        orderNowBtn.setHoverColor(new Color(160, 220, 160));
-        orderNowBtn.setPreferredSize(new Dimension(170, 45));
-        orderNowBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         
-        // Hover effect is handled by RoundedButton
         
-        orderNowBtn.addActionListener(e -> orderNow());
+        
         
         buttonPanel.add(addToCartBtn);
-        buttonPanel.add(orderNowBtn);
         
         return buttonPanel;
     }
@@ -343,45 +334,9 @@ public class PcbPrinting extends JFrame {
             JOptionPane.INFORMATION_MESSAGE);
     }
     
-    private void orderNow() {
-        if (!currentOrder.isValid()) {
-            JOptionPane.showMessageDialog(this,
-                "Please upload a PCB file first!",
-                "No File Selected",
-                JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        
-        int response = JOptionPane.showConfirmDialog(this,
-            currentOrder.getOrderSummary() + "\n\nConfirm order?",
-            "Confirm PCB Order",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.QUESTION_MESSAGE);
-            
-        if (response == JOptionPane.YES_OPTION) {
-            JOptionPane.showMessageDialog(this,
-                "Order placed successfully!\nYou will receive a confirmation email shortly.\nEstimated delivery: 7-10 business days",
-                "Order Confirmed",
-                JOptionPane.INFORMATION_MESSAGE);
-            
-            // Reset form for new order
-            resetForm();
-        }
-    }
+
     
-    private void resetForm() {
-        currentOrder = new PCBOrder();
-        fileLabel.setText("No file selected");
-        fileLabel.setForeground(Color.GRAY);
-        fileLabel.setFont(new Font("SansSerif", Font.ITALIC, 14));
-        materialCombo.setSelectedIndex(0);
-        layersCombo.setSelectedIndex(0);
-        surfaceFinishCombo.setSelectedIndex(0);
-        solderMaskCombo.setSelectedIndex(0);
-        quantitySpinner.setValue(5);
-        updatePriceDisplay();
-    }
-    
+
     private JPanel createNavBar() {
         JPanel header = new JPanel(new BorderLayout());
         header.setBackground(Color.WHITE);

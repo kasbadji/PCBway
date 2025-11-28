@@ -191,15 +191,68 @@ public class OrderServiceMongo {
             String userEmail = (String) documentClass.getMethod("get", Object.class).invoke(doc, "userEmail");
             String status = (String) documentClass.getMethod("get", Object.class).invoke(doc, "status");
             
-            Order order = new Order(userEmail, new ArrayList<>());
+            // Get financial data
+            Double subtotal = (Double) documentClass.getMethod("get", Object.class).invoke(doc, "subtotal");
+            Double shipping = (Double) documentClass.getMethod("get", Object.class).invoke(doc, "shipping");
+            Double total = (Double) documentClass.getMethod("get", Object.class).invoke(doc, "total");
+            
+            // Parse items array
+            java.util.List<?> itemsArray = (java.util.List<?>) documentClass.getMethod("get", Object.class).invoke(doc, "items");
+            java.util.List<CartItem> cartItems = new ArrayList<>();
+            
+            if (itemsArray != null) {
+                for (Object itemObj : itemsArray) {
+                    try {
+                        String productName = (String) documentClass.getMethod("get", Object.class).invoke(itemObj, "productName");
+                        Double price = (Double) documentClass.getMethod("get", Object.class).invoke(itemObj, "price");
+                        Integer quantity = (Integer) documentClass.getMethod("get", Object.class).invoke(itemObj, "quantity");
+                        
+                        if (productName != null && price != null && quantity != null) {
+                            // Create a minimal product for the cart item
+                            model.Product product = new model.Product(productName, "", price, "");
+                            CartItem cartItem = new CartItem(product, quantity);
+                            cartItems.add(cartItem);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error parsing order item: " + e.getMessage());
+                    }
+                }
+            }
+            
+            // Create order with items
+            Order order = new Order(userEmail, cartItems);
             if (orderId != null) order.setOrderId(orderId);
             if (status != null) order.setStatus(status);
             
-            // TODO: Parse items and payment info from MongoDB document
+            // Set financial data if available
+            if (subtotal != null && shipping != null && total != null) {
+                // Set financial data directly
+                order.setSubtotal(subtotal);
+                order.setShipping(shipping);
+                order.setTotal(total);
+            }
+            
+            // Parse payment info
+            Object paymentInfoObj = documentClass.getMethod("get", Object.class).invoke(doc, "paymentInfo");
+            if (paymentInfoObj != null) {
+                try {
+                    String cardHolderName = (String) documentClass.getMethod("get", Object.class).invoke(paymentInfoObj, "cardHolderName");
+                    String cardType = (String) documentClass.getMethod("get", Object.class).invoke(paymentInfoObj, "cardType");
+                    String lastFourDigits = (String) documentClass.getMethod("get", Object.class).invoke(paymentInfoObj, "lastFourDigits");
+                    
+                    if (cardHolderName != null && cardType != null && lastFourDigits != null) {
+                        Order.PaymentInfo paymentInfo = new Order.PaymentInfo(cardHolderName, cardType, lastFourDigits);
+                        order.setPaymentInfo(paymentInfo);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error parsing payment info: " + e.getMessage());
+                }
+            }
             
             return order;
         } catch (Exception e) {
             System.err.println("Error converting document to order: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }

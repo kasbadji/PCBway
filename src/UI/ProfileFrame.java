@@ -2,7 +2,6 @@ package UI;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.text.DecimalFormat;
 import java.util.List;
 import styles.RoundedButton;
@@ -291,20 +290,55 @@ public class ProfileFrame extends JFrame {
     
     private void saveUserData() {
         if (currentUser != null) {
-            // Update user data using UserService
-            String name = nameField.getText().trim();
-            String phone = phoneField.getText().trim();
-            String address = addressField.getText().trim();
-            
-            // Update the current user object
-            currentUser.setFullname(name);
-            currentUser.setPhonenumber(phone);
-            currentUser.setAddress(address);
-            
-            JOptionPane.showMessageDialog(this, 
-                "Profile updated successfully!", 
-                "Success", 
-                JOptionPane.INFORMATION_MESSAGE);
+            try {
+                // Get the updated values
+                String name = nameField.getText().trim();
+                String phone = phoneField.getText().trim();
+                String address = addressField.getText().trim();
+                
+                // Basic validation
+                if (name.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Name cannot be empty!", 
+                        "Validation Error", 
+                        JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                
+                // Update the current user object
+                currentUser.setFullname(name);
+                currentUser.setPhonenumber(phone);
+                currentUser.setAddress(address);
+                
+                // Save to database using UserService
+                boolean success = userService.updateUser(currentUser);
+                
+                // Update the current user in UserService to keep session in sync
+                if (success && userService.getCurrentUser() != null && 
+                    userService.getCurrentUser().getEmail().equals(currentUser.getEmail())) {
+                    // The UserService.updateUser method should already handle this,
+                    // but we ensure the current session reflects the changes
+                    System.out.println("✓ Profile updated in database and session synchronized");
+                }
+                
+                if (success) {
+                    JOptionPane.showMessageDialog(this, 
+                        "Profile updated successfully and saved to database!", 
+                        "Success", 
+                        JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, 
+                        "Profile updated locally but failed to save to database.", 
+                        "Warning", 
+                        JOptionPane.WARNING_MESSAGE);
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, 
+                    "Error updating profile: " + e.getMessage(), 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
         }
     }
     

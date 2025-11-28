@@ -4,7 +4,6 @@ import javax.swing.*;
 import styles.RoundedBorder;
 import styles.RoundedButton;
 import service.UserService;
-import model.User;
 import java.awt.*;
 
 public class SignupFrame extends JFrame {
