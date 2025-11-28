@@ -1,6 +1,6 @@
 import UI.LoginFrame;
 import config.DatabaseConfig;
-import service.UserServiceMongo;
+import service.UserService;
 import javax.swing.SwingUtilities;
 
 public class App {
@@ -49,7 +49,7 @@ public class App {
     private static void testDatabaseOperations() {
         System.out.println("=== Testing Database Operations ===");
         try {
-            UserServiceMongo userService = new UserServiceMongo();
+            UserService userService = UserService.getInstance();
             
             // Test user registration
             System.out.println("Testing user registration...");
@@ -61,14 +61,11 @@ public class App {
             boolean loggedIn = userService.login("test@pcbway.com", "password123");
             if (loggedIn) {
                 System.out.println("✓ User login successful");
-                // Get current user via reflection since method is private
+                // Get current user
                 try {
-                    java.lang.reflect.Method getCurrentUserMethod = UserServiceMongo.class.getSuperclass().getDeclaredMethod("getCurrentUser");
-                    if (getCurrentUserMethod != null) {
-                        Object currentUser = getCurrentUserMethod.invoke(userService);
-                        if (currentUser != null) {
-                            System.out.println("Current user logged in successfully");
-                        }
+                    Object currentUser = userService.getCurrentUser();
+                    if (currentUser != null) {
+                        System.out.println("Current user logged in successfully");
                     }
                 } catch (Exception e) {
                     System.out.println("User is logged in (unable to get user details)");

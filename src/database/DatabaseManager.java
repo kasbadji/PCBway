@@ -155,31 +155,25 @@ public class DatabaseManager {
         }
         
         try {
-            Object collection = database.getClass().getMethod("getCollection", String.class)
+            // Get the collection using the public interface
+            Class<?> mongoDatabaseClass = Class.forName("com.mongodb.client.MongoDatabase");
+            Object collection = mongoDatabaseClass.getMethod("getCollection", String.class)
                 .invoke(database, collectionName);
             
-            // Try insertOne first
-            try {
-                collection.getClass().getMethod("insertOne", Object.class)
-                    .invoke(collection, document);
-                return true;
-            } catch (Exception insertEx) {
-                // Try a basic save-style approach as fallback
-                try {
-                    // Get the collection as BasicDBCollection for save method
-                    Object basicCollection = collection;
-                    basicCollection.getClass().getMethod("save", Object.class)
-                        .invoke(basicCollection, document);
-                    return true;
-                } catch (Exception saveEx) {
-                    System.err.println("MongoDB insert failed - both insertOne and save methods unavailable");
-                    System.err.println("Insert error: " + insertEx.getClass().getSimpleName());
-                    System.err.println("Save error: " + saveEx.getClass().getSimpleName());
-                    return false;
-                }
-            }
+            // Use the MongoCollection interface for insertOne
+            Class<?> mongoCollectionClass = Class.forName("com.mongodb.client.MongoCollection");
+            Object result = mongoCollectionClass.getMethod("insertOne", Object.class)
+                .invoke(collection, document);
+            
+            // Check if the insert was acknowledged
+            Class<?> insertOneResultClass = Class.forName("com.mongodb.client.result.InsertOneResult");
+            Boolean wasAcknowledged = (Boolean) insertOneResultClass.getMethod("wasAcknowledged")
+                .invoke(result);
+            
+            return wasAcknowledged != null && wasAcknowledged;
+            
         } catch (Exception e) {
-            System.err.println("Failed to access MongoDB collection: " + e.getMessage());
+            System.err.println("MongoDB insert failed: " + e.getMessage());
             return false;
         }
     }

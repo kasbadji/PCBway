@@ -11,7 +11,7 @@ public class LoginFrame extends JFrame {
     private UserService userService;
 
     public LoginFrame() {
-        this.userService = SignupFrame.getUserService();
+        this.userService = UserService.getInstance();
         setTitle("Log In");
         setSize(1920, 1080);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

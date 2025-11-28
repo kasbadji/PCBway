@@ -9,9 +9,26 @@ import java.util.UUID;
 public class OrderServiceMongo {
     private static OrderServiceMongo instance;
     private List<Order> localOrders = new ArrayList<>();
+    private boolean useDatabase = false;
 
     private OrderServiceMongo() {
-        System.out.println("✓ OrderServiceMongo initialized (local storage)");
+        checkMongoConnection();
+    }
+    
+    private void checkMongoConnection() {
+        try {
+            Class<?> dbManagerClass = Class.forName("database.DatabaseManager");
+            Object dbManager = dbManagerClass.getMethod("getInstance").invoke(null);
+            Object database = dbManagerClass.getMethod("getDatabase").invoke(dbManager);
+            
+            if (database != null) {
+                useDatabase = true;
+                System.out.println("✓ OrderServiceMongo initialized with MongoDB");
+            }
+        } catch (Exception e) {
+            System.err.println("MongoDB not available for OrderService, using local storage");
+            useDatabase = false;
+        }
     }
 
     public static OrderServiceMongo getInstance() {
@@ -38,14 +55,156 @@ public class OrderServiceMongo {
         order.setPaymentInfo(paymentInfo);
         order.setStatus("Confirmed");
         
-        // Save locally
-        localOrders.add(order);
-        System.out.println("✓ Order saved locally: " + order.getOrderId());
+        // Save to MongoDB if available
+        if (useDatabase) {
+            try {
+                saveOrderToMongoDB(order);
+                System.out.println("✓ Order saved to MongoDB: " + order.getOrderId());
+            } catch (Exception e) {
+                System.err.println("Failed to save to MongoDB, using local storage: " + e.getMessage());
+                localOrders.add(order);
+            }
+        } else {
+            localOrders.add(order);
+            System.out.println("✓ Order saved locally: " + order.getOrderId());
+        }
         
         return order;
     }
+    
+    private void saveOrderToMongoDB(Order order) throws Exception {
+        Class<?> dbManagerClass = Class.forName("database.DatabaseManager");
+        Object dbManager = dbManagerClass.getMethod("getInstance").invoke(null);
+        
+        Class<?> documentClass = Class.forName("org.bson.Document");
+        Object orderDoc = documentClass.getConstructor().newInstance();
+        
+        // Add order fields
+        documentClass.getMethod("put", Object.class, Object.class)
+            .invoke(orderDoc, "orderId", order.getOrderId());
+        documentClass.getMethod("put", Object.class, Object.class)
+            .invoke(orderDoc, "userEmail", order.getUserEmail());
+        documentClass.getMethod("put", Object.class, Object.class)
+            .invoke(orderDoc, "subtotal", order.getSubtotal());
+        documentClass.getMethod("put", Object.class, Object.class)
+            .invoke(orderDoc, "shipping", order.getShipping());
+        documentClass.getMethod("put", Object.class, Object.class)
+            .invoke(orderDoc, "total", order.getTotal());
+        documentClass.getMethod("put", Object.class, Object.class)
+            .invoke(orderDoc, "orderDate", order.getOrderDate().toString());
+        documentClass.getMethod("put", Object.class, Object.class)
+            .invoke(orderDoc, "status", order.getStatus());
+        
+        // Add items
+        List<Object> itemsDocs = new ArrayList<>();
+        for (Order.OrderItem item : order.getItems()) {
+            Object itemDoc = documentClass.getConstructor().newInstance();
+            documentClass.getMethod("put", Object.class, Object.class)
+                .invoke(itemDoc, "productName", item.getProductName());
+            documentClass.getMethod("put", Object.class, Object.class)
+                .invoke(itemDoc, "price", item.getPrice());
+            documentClass.getMethod("put", Object.class, Object.class)
+                .invoke(itemDoc, "quantity", item.getQuantity());
+            itemsDocs.add(itemDoc);
+        }
+        documentClass.getMethod("put", Object.class, Object.class)
+            .invoke(orderDoc, "items", itemsDocs);
+        
+        // Add payment info
+        if (order.getPaymentInfo() != null) {
+            Object paymentDoc = documentClass.getConstructor().newInstance();
+            documentClass.getMethod("put", Object.class, Object.class)
+                .invoke(paymentDoc, "cardHolderName", order.getPaymentInfo().getCardHolderName());
+            documentClass.getMethod("put", Object.class, Object.class)
+                .invoke(paymentDoc, "cardType", order.getPaymentInfo().getCardType());
+            documentClass.getMethod("put", Object.class, Object.class)
+                .invoke(paymentDoc, "lastFourDigits", order.getPaymentInfo().getLastFourDigits());
+            documentClass.getMethod("put", Object.class, Object.class)
+                .invoke(orderDoc, "paymentInfo", paymentDoc);
+        }
+        
+        // Insert into MongoDB
+        Boolean success = (Boolean) dbManagerClass.getMethod("insertDocument", String.class, Object.class)
+            .invoke(dbManager, "orders", orderDoc);
+            
+        if (!success) {
+            throw new Exception("MongoDB insertion failed");
+        }
+    }
 
     public List<Order> getOrdersByUser(String userEmail) {
+        List<Order> userOrders = new ArrayList<>();
+        
+        if (useDatabase) {
+            try {
+                userOrders = getOrdersFromMongoDB(userEmail);
+            } catch (Exception e) {
+                System.err.println("Failed to fetch from MongoDB, using local orders: " + e.getMessage());
+                userOrders = getLocalOrdersByUser(userEmail);
+            }
+        } else {
+            userOrders = getLocalOrdersByUser(userEmail);
+        }
+        
+        return userOrders;
+    }
+    
+    private List<Order> getOrdersFromMongoDB(String userEmail) throws Exception {
+        List<Order> orders = new ArrayList<>();
+        
+        Class<?> dbManagerClass = Class.forName("database.DatabaseManager");
+        Object dbManager = dbManagerClass.getMethod("getInstance").invoke(null);
+        Object database = dbManagerClass.getMethod("getDatabase").invoke(dbManager);
+        
+        Class<?> mongoDatabaseClass = Class.forName("com.mongodb.client.MongoDatabase");
+        Object collection = mongoDatabaseClass.getMethod("getCollection", String.class)
+            .invoke(database, "orders");
+            
+        Class<?> filtersClass = Class.forName("com.mongodb.client.model.Filters");
+        Object filter = filtersClass.getMethod("eq", String.class, Object.class)
+            .invoke(null, "userEmail", userEmail);
+            
+        Class<?> mongoCollectionClass = Class.forName("com.mongodb.client.MongoCollection");
+        Object cursor = mongoCollectionClass.getMethod("find", Class.forName("org.bson.conversions.Bson"))
+            .invoke(collection, filter);
+        
+        Class<?> findIterableClass = Class.forName("com.mongodb.client.FindIterable");
+        Object iterator = findIterableClass.getMethod("iterator").invoke(cursor);
+        
+        Class<?> iteratorClass = Class.forName("com.mongodb.client.MongoCursor");
+        while ((Boolean) iteratorClass.getMethod("hasNext").invoke(iterator)) {
+            Object doc = iteratorClass.getMethod("next").invoke(iterator);
+            Order order = convertDocumentToOrder(doc);
+            if (order != null) {
+                orders.add(order);
+            }
+        }
+        
+        return orders;
+    }
+    
+    private Order convertDocumentToOrder(Object doc) {
+        try {
+            Class<?> documentClass = Class.forName("org.bson.Document");
+            
+            String orderId = (String) documentClass.getMethod("get", Object.class).invoke(doc, "orderId");
+            String userEmail = (String) documentClass.getMethod("get", Object.class).invoke(doc, "userEmail");
+            String status = (String) documentClass.getMethod("get", Object.class).invoke(doc, "status");
+            
+            Order order = new Order(userEmail, new ArrayList<>());
+            if (orderId != null) order.setOrderId(orderId);
+            if (status != null) order.setStatus(status);
+            
+            // TODO: Parse items and payment info from MongoDB document
+            
+            return order;
+        } catch (Exception e) {
+            System.err.println("Error converting document to order: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    private List<Order> getLocalOrdersByUser(String userEmail) {
         List<Order> userOrders = new ArrayList<>();
         for (Order order : localOrders) {
             if (order.getUserEmail().equals(userEmail)) {
@@ -56,6 +215,15 @@ public class OrderServiceMongo {
     }
 
     public Order getOrderById(String orderId) {
+        if (useDatabase) {
+            try {
+                return getOrderFromMongoDBById(orderId);
+            } catch (Exception e) {
+                System.err.println("Failed to fetch from MongoDB: " + e.getMessage());
+            }
+        }
+        
+        // Check local orders
         for (Order order : localOrders) {
             if (order.getOrderId().equals(orderId)) {
                 return order;
@@ -64,7 +232,65 @@ public class OrderServiceMongo {
         return null;
     }
     
+    private Order getOrderFromMongoDBById(String orderId) throws Exception {
+        Class<?> dbManagerClass = Class.forName("database.DatabaseManager");
+        Object dbManager = dbManagerClass.getMethod("getInstance").invoke(null);
+        Object database = dbManagerClass.getMethod("getDatabase").invoke(dbManager);
+        
+        Class<?> mongoDatabaseClass = Class.forName("com.mongodb.client.MongoDatabase");
+        Object collection = mongoDatabaseClass.getMethod("getCollection", String.class)
+            .invoke(database, "orders");
+            
+        Class<?> filtersClass = Class.forName("com.mongodb.client.model.Filters");
+        Object filter = filtersClass.getMethod("eq", String.class, Object.class)
+            .invoke(null, "orderId", orderId);
+            
+        Class<?> mongoCollectionClass = Class.forName("com.mongodb.client.MongoCollection");
+        Object findIterable = mongoCollectionClass.getMethod("find", Class.forName("org.bson.conversions.Bson"))
+            .invoke(collection, filter);
+        
+        Class<?> findIterableClass = Class.forName("com.mongodb.client.FindIterable");
+        Object firstDoc = findIterableClass.getMethod("first").invoke(findIterable);
+        
+        return firstDoc != null ? convertDocumentToOrder(firstDoc) : null;
+    }
+    
     public List<Order> getAllOrders() {
-        return new ArrayList<>(localOrders);
+        List<Order> allOrders = new ArrayList<>();
+        
+        if (useDatabase) {
+            try {
+                // Get all orders from MongoDB
+                Class<?> dbManagerClass = Class.forName("database.DatabaseManager");
+                Object dbManager = dbManagerClass.getMethod("getInstance").invoke(null);
+                Object database = dbManagerClass.getMethod("getDatabase").invoke(dbManager);
+                
+                Class<?> mongoDatabaseClass = Class.forName("com.mongodb.client.MongoDatabase");
+                Object collection = mongoDatabaseClass.getMethod("getCollection", String.class)
+                    .invoke(database, "orders");
+                    
+                Class<?> mongoCollectionClass = Class.forName("com.mongodb.client.MongoCollection");
+                Object cursor = mongoCollectionClass.getMethod("find").invoke(collection);
+                
+                Class<?> findIterableClass = Class.forName("com.mongodb.client.FindIterable");
+                Object iterator = findIterableClass.getMethod("iterator").invoke(cursor);
+                
+                Class<?> iteratorClass = Class.forName("com.mongodb.client.MongoCursor");
+                while ((Boolean) iteratorClass.getMethod("hasNext").invoke(iterator)) {
+                    Object doc = iteratorClass.getMethod("next").invoke(iterator);
+                    Order order = convertDocumentToOrder(doc);
+                    if (order != null) {
+                        allOrders.add(order);
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to fetch all orders from MongoDB: " + e.getMessage());
+                allOrders.addAll(localOrders);
+            }
+        } else {
+            allOrders.addAll(localOrders);
+        }
+        
+        return allOrders;
     }
 }

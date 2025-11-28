@@ -4,12 +4,12 @@ import javax.swing.*;
 import styles.RoundedBorder;
 import styles.RoundedButton;
 import service.UserService;
-import service.UserServiceMongo;
+import model.User;
 import java.awt.*;
 
 public class SignupFrame extends JFrame {
     
-    private static UserService userService = new UserServiceMongo();
+    private static UserService userService = UserService.getInstance();
 
     public SignupFrame() {
         setTitle("Sign Up");

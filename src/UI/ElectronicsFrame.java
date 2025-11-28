@@ -8,6 +8,7 @@ import styles.RoundedBorder;
 import styles.RoundedButton;
 import service.ProductService;
 import service.CartService;
+import service.UserService;
 import model.Product;
 
 public class ElectronicsFrame extends JFrame {
@@ -255,8 +256,8 @@ public class ElectronicsFrame extends JFrame {
         profileIcon.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (SignupFrame.getUserService().isLoggedIn()) {
-                    new ProfileFrame(SignupFrame.getUserService().getCurrentUser()).setVisible(true);
+                if (UserService.getInstance().isLoggedIn()) {
+                    new ProfileFrame(UserService.getInstance().getCurrentUser()).setVisible(true);
                 } else {
                     JOptionPane.showMessageDialog(ElectronicsFrame.this,
                         "Please login to access your profile.",

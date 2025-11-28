@@ -7,12 +7,14 @@ import java.text.DecimalFormat;
 import java.util.List;
 import styles.RoundedButton;
 import service.OrderServiceMongo;
+import service.UserService;
 import model.Order;
 import model.User;
 
 public class ProfileFrame extends JFrame {
     private User currentUser;
     private OrderServiceMongo orderService;
+    private UserService userService;
     private DecimalFormat priceFormat;
     private JTextField nameField, emailField, phoneField, addressField;
     private JPanel orderHistoryPanel;
@@ -20,6 +22,7 @@ public class ProfileFrame extends JFrame {
     public ProfileFrame(User user) {
         this.currentUser = user;
         this.orderService = OrderServiceMongo.getInstance();
+        this.userService = UserService.getInstance();
         this.priceFormat = new DecimalFormat("$#,##0.00");
         
         initializeFrame();
