@@ -9,6 +9,8 @@ import java.io.OutputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import model.ContactMessage;
+import service.ContactMessageService;
 import styles.RoundedBorder;
 
 public class ContactFrame extends JFrame {
@@ -404,7 +406,30 @@ public class ContactFrame extends JFrame {
                                JTextField emailField, JTextArea messageArea) {
         new Thread(() -> {
             try {
-                // Create JSON payload
+                // Get form values
+                String name = nameField.getText().equals("Value") ? "" : nameField.getText();
+                String surname = surnameField.getText().equals("Value") ? "" : surnameField.getText();
+                
+                // Create and save contact message to database first
+                ContactMessage contactMessage = new ContactMessage(name, surname, email, message);
+                ContactMessageService contactService = ContactMessageService.getInstance();
+                
+                System.out.println("Saving contact message to database...");
+                boolean savedToDb = contactService.saveContactMessage(contactMessage);
+                
+                if (!savedToDb) {
+                    SwingUtilities.invokeLater(() -> {
+                        submitButton.setEnabled(true);
+                        submitButton.setText("Submit");
+                        JOptionPane.showMessageDialog(this,
+                            "Failed to save message to database. Please try again.",
+                            "Database Error",
+                            JOptionPane.ERROR_MESSAGE);
+                    });
+                    return;
+                }
+                
+                // Create JSON payload for email API
                 String jsonPayload = String.format(
                     "{\"email\":\"%s\",\"message\":\"%s\"}",
                     email.replace("\"", "\\\""),
@@ -450,14 +475,29 @@ public class ContactFrame extends JFrame {
                 System.out.println("Status Code: " + responseCode);
                 System.out.println("Response Body: " + responseBody);
                 
+                // Update email sent status in database
+                boolean emailSent = (responseCode == 200);
+                if (contactMessage.getId() != null) {
+                    contactService.updateEmailSentStatus(contactMessage.getId(), emailSent);
+                }
+                
                 SwingUtilities.invokeLater(() -> {
                     submitButton.setEnabled(true);
                     submitButton.setText("Submit");
                     
                     if (responseCode == 200) {
                         // Success
+                        String successMessage = String.format(
+                            "Message sent successfully!\n\n" +
+                            "✓ Saved to database at %s\n" +
+                            "✓ Email sent to API\n" +
+                            "✓ Contact: %s %s (%s)",
+                            contactMessage.getFormattedTimestamp(),
+                            name, surname, email
+                        );
+                        
                         JOptionPane.showMessageDialog(this,
-                            "Message sent successfully!",
+                            successMessage,
                             "Success",
                             JOptionPane.INFORMATION_MESSAGE);
                         
@@ -471,11 +511,21 @@ public class ContactFrame extends JFrame {
                         messageArea.setText("Value");
                         messageArea.setForeground(Color.LIGHT_GRAY);
                     } else {
-                        // API error
+                        // API error but message was saved to database
+                        String errorMessage = String.format(
+                            "Message saved to database but email sending failed.\n\n" +
+                            "✓ Saved to database at %s\n" +
+                            "✗ Email API error (Code: %d)\n" +
+                            "Contact: %s %s (%s)",
+                            contactMessage.getFormattedTimestamp(),
+                            responseCode,
+                            name, surname, email
+                        );
+                        
                         JOptionPane.showMessageDialog(this,
-                            "Failed to send message. Server responded with: " + responseCode,
-                            "Send Failed",
-                            JOptionPane.ERROR_MESSAGE);
+                            errorMessage,
+                            "Partial Success",
+                            JOptionPane.WARNING_MESSAGE);
                     }
                 });
                 
