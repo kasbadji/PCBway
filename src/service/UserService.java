@@ -16,13 +16,13 @@ public class UserService {
         checkMongoConnection();
         initializeDefaultUsers();
     }
-    
+
     private void checkMongoConnection() {
         try {
             Class<?> dbManagerClass = Class.forName("database.DatabaseManager");
             Object dbManager = dbManagerClass.getMethod("getInstance").invoke(null);
             Object database = dbManagerClass.getMethod("getDatabase").invoke(dbManager);
-            
+
             if (database != null) {
                 useDatabase = true;
                 System.out.println("✓ UserService initialized with MongoDB");
@@ -67,7 +67,7 @@ public class UserService {
         }
 
         user.setPassword(hashPassword(user.getPassword()));
-        
+
         if (useDatabase) {
             try {
                 saveUserToMongoDB(user);
@@ -84,30 +84,35 @@ public class UserService {
             return true;
         }
     }
-    
+
     private void saveUserToMongoDB(User user) throws Exception {
         Class<?> dbManagerClass = Class.forName("database.DatabaseManager");
         Object dbManager = dbManagerClass.getMethod("getInstance").invoke(null);
-        
+
         Class<?> documentClass = Class.forName("org.bson.Document");
         Object userDoc = documentClass.getConstructor().newInstance();
-        
+
         // Add user fields
         documentClass.getMethod("put", Object.class, Object.class)
-            .invoke(userDoc, "email", user.getEmail());
+                .invoke(userDoc, "email", user.getEmail());
         documentClass.getMethod("put", Object.class, Object.class)
-            .invoke(userDoc, "password", user.getPassword());
+                .invoke(userDoc, "password", user.getPassword());
         documentClass.getMethod("put", Object.class, Object.class)
-            .invoke(userDoc, "fullname", user.getFullname());
+                .invoke(userDoc, "fullname", user.getFullname());
         documentClass.getMethod("put", Object.class, Object.class)
-            .invoke(userDoc, "address", user.getAddress());
+                .invoke(userDoc, "address", user.getAddress());
         documentClass.getMethod("put", Object.class, Object.class)
-            .invoke(userDoc, "phonenumber", user.getPhonenumber());
-        
+                .invoke(userDoc, "phonenumber", user.getPhonenumber());
+
+        // Add payment methods
+        Object paymentMethodsList = convertPaymentMethodsToDocuments(user.getPaymentMethods());
+        documentClass.getMethod("put", Object.class, Object.class)
+                .invoke(userDoc, "paymentMethods", paymentMethodsList);
+
         // Insert into MongoDB
         Boolean success = (Boolean) dbManagerClass.getMethod("insertDocument", String.class, Object.class)
-            .invoke(dbManager, "users", userDoc);
-            
+                .invoke(dbManager, "users", userDoc);
+
         if (!success) {
             throw new Exception("MongoDB insertion failed");
         }
@@ -134,7 +139,7 @@ public class UserService {
                 System.err.println("Failed to fetch user from MongoDB: " + e.getMessage());
             }
         }
-        
+
         // Check local users
         for (User user : localUsers) {
             if (user.getEmail().equals(email)) {
@@ -143,54 +148,128 @@ public class UserService {
         }
         return null;
     }
-    
+
     private User getUserFromMongoDB(String email) throws Exception {
         Class<?> dbManagerClass = Class.forName("database.DatabaseManager");
         Object dbManager = dbManagerClass.getMethod("getInstance").invoke(null);
         Object database = dbManagerClass.getMethod("getDatabase").invoke(dbManager);
-        
+
         // Use proper MongoDB API
         Class<?> mongoDatabaseClass = Class.forName("com.mongodb.client.MongoDatabase");
         Object collection = mongoDatabaseClass.getMethod("getCollection", String.class)
-            .invoke(database, "users");
-            
+                .invoke(database, "users");
+
         Class<?> filtersClass = Class.forName("com.mongodb.client.model.Filters");
         Object filter = filtersClass.getMethod("eq", String.class, Object.class)
-            .invoke(null, "email", email);
-            
+                .invoke(null, "email", email);
+
         Class<?> mongoCollectionClass = Class.forName("com.mongodb.client.MongoCollection");
         Object findIterable = mongoCollectionClass.getMethod("find", Class.forName("org.bson.conversions.Bson"))
-            .invoke(collection, filter);
-        
+                .invoke(collection, filter);
+
         Class<?> findIterableClass = Class.forName("com.mongodb.client.FindIterable");
         Object firstDoc = findIterableClass.getMethod("first").invoke(findIterable);
-        
+
         if (firstDoc != null) {
             return convertDocumentToUser(firstDoc);
         }
         return null;
     }
-    
+
     private User convertDocumentToUser(Object doc) {
         try {
             Class<?> documentClass = Class.forName("org.bson.Document");
-            
+
             String email = (String) documentClass.getMethod("get", Object.class).invoke(doc, "email");
             String password = (String) documentClass.getMethod("get", Object.class).invoke(doc, "password");
             String fullname = (String) documentClass.getMethod("get", Object.class).invoke(doc, "fullname");
             String address = (String) documentClass.getMethod("get", Object.class).invoke(doc, "address");
             String phonenumber = (String) documentClass.getMethod("get", Object.class).invoke(doc, "phonenumber");
-            
+
             User user = new User(email, password);
-            if (fullname != null) user.setFullname(fullname);
-            if (address != null) user.setAddress(address);
-            if (phonenumber != null) user.setPhonenumber(phonenumber);
-            
+            if (fullname != null)
+                user.setFullname(fullname);
+            if (address != null)
+                user.setAddress(address);
+            if (phonenumber != null)
+                user.setPhonenumber(phonenumber);
+
+            // Load payment methods
+            Object paymentMethodsObj = documentClass.getMethod("get", Object.class).invoke(doc, "paymentMethods");
+            if (paymentMethodsObj != null) {
+                List<model.PaymentMethod> paymentMethods = convertDocumentsToPaymentMethods(paymentMethodsObj);
+                user.setPaymentMethods(paymentMethods);
+            }
+
             return user;
         } catch (Exception e) {
             System.err.println("Error converting document to user: " + e.getMessage());
             return null;
         }
+    }
+
+    private Object convertPaymentMethodsToDocuments(List<model.PaymentMethod> paymentMethods) throws Exception {
+        List<Object> documents = new ArrayList<>();
+
+        if (paymentMethods == null || paymentMethods.isEmpty()) {
+            return documents;
+        }
+
+        Class<?> documentClass = Class.forName("org.bson.Document");
+
+        for (model.PaymentMethod pm : paymentMethods) {
+            Object pmDoc = documentClass.getConstructor().newInstance();
+            documentClass.getMethod("put", Object.class, Object.class).invoke(pmDoc, "id", pm.getId());
+            documentClass.getMethod("put", Object.class, Object.class).invoke(pmDoc, "cardHolderName",
+                    pm.getCardHolderName());
+            documentClass.getMethod("put", Object.class, Object.class).invoke(pmDoc, "cardType", pm.getCardType());
+            documentClass.getMethod("put", Object.class, Object.class).invoke(pmDoc, "lastFourDigits",
+                    pm.getLastFourDigits());
+            documentClass.getMethod("put", Object.class, Object.class).invoke(pmDoc, "expiryMonth",
+                    pm.getExpiryMonth());
+            documentClass.getMethod("put", Object.class, Object.class).invoke(pmDoc, "expiryYear", pm.getExpiryYear());
+            documentClass.getMethod("put", Object.class, Object.class).invoke(pmDoc, "isDefault", pm.isDefault());
+            documents.add(pmDoc);
+        }
+
+        return documents;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<model.PaymentMethod> convertDocumentsToPaymentMethods(Object documentsObj) throws Exception {
+        List<model.PaymentMethod> paymentMethods = new ArrayList<>();
+
+        if (documentsObj == null) {
+            return paymentMethods;
+        }
+
+        Class<?> documentClass = Class.forName("org.bson.Document");
+
+        // The documentsObj should be a List
+        if (documentsObj instanceof List) {
+            List<Object> documents = (List<Object>) documentsObj;
+
+            for (Object pmDoc : documents) {
+                String id = (String) documentClass.getMethod("get", Object.class).invoke(pmDoc, "id");
+                String cardHolderName = (String) documentClass.getMethod("get", Object.class).invoke(pmDoc,
+                        "cardHolderName");
+                String cardType = (String) documentClass.getMethod("get", Object.class).invoke(pmDoc, "cardType");
+                String lastFourDigits = (String) documentClass.getMethod("get", Object.class).invoke(pmDoc,
+                        "lastFourDigits");
+                String expiryMonth = (String) documentClass.getMethod("get", Object.class).invoke(pmDoc,
+                        "expiryMonth");
+                String expiryYear = (String) documentClass.getMethod("get", Object.class).invoke(pmDoc, "expiryYear");
+                Boolean isDefault = (Boolean) documentClass.getMethod("get", Object.class).invoke(pmDoc, "isDefault");
+
+                model.PaymentMethod pm = new model.PaymentMethod(cardHolderName, cardType, lastFourDigits, expiryMonth,
+                        expiryYear);
+                pm.setId(id);
+                pm.setDefault(isDefault != null ? isDefault : false);
+                paymentMethods.add(pm);
+            }
+        }
+
+        return paymentMethods;
     }
 
     public boolean updateUser(User user) {
@@ -207,39 +286,46 @@ public class UserService {
             return updateUserLocally(user);
         }
     }
-    
+
     private void updateUserInMongoDB(User user) throws Exception {
         Class<?> dbManagerClass = Class.forName("database.DatabaseManager");
         Object dbManager = dbManagerClass.getMethod("getInstance").invoke(null);
         Object database = dbManagerClass.getMethod("getDatabase").invoke(dbManager);
-        
+
         Class<?> mongoDatabaseClass = Class.forName("com.mongodb.client.MongoDatabase");
         Object collection = mongoDatabaseClass.getMethod("getCollection", String.class)
-            .invoke(database, "users");
-            
+                .invoke(database, "users");
+
         Class<?> filtersClass = Class.forName("com.mongodb.client.model.Filters");
         Object filter = filtersClass.getMethod("eq", String.class, Object.class)
-            .invoke(null, "email", user.getEmail());
-            
+                .invoke(null, "email", user.getEmail());
+
         Class<?> documentClass = Class.forName("org.bson.Document");
         Object updateDoc = documentClass.getConstructor().newInstance();
-        
+
         Object setDoc = documentClass.getConstructor().newInstance();
         documentClass.getMethod("put", Object.class, Object.class)
-            .invoke(setDoc, "fullname", user.getFullname());
+                .invoke(setDoc, "fullname", user.getFullname());
         documentClass.getMethod("put", Object.class, Object.class)
-            .invoke(setDoc, "address", user.getAddress());
+                .invoke(setDoc, "address", user.getAddress());
         documentClass.getMethod("put", Object.class, Object.class)
-            .invoke(setDoc, "phonenumber", user.getPhonenumber());
-            
+                .invoke(setDoc, "phonenumber", user.getPhonenumber());
+
+        // Update payment methods
+        Object paymentMethodsList = convertPaymentMethodsToDocuments(user.getPaymentMethods());
         documentClass.getMethod("put", Object.class, Object.class)
-            .invoke(updateDoc, "$set", setDoc);
-        
+                .invoke(setDoc, "paymentMethods", paymentMethodsList);
+
+        documentClass.getMethod("put", Object.class, Object.class)
+                .invoke(updateDoc, "$set", setDoc);
+
         Class<?> mongoCollectionClass = Class.forName("com.mongodb.client.MongoCollection");
-        mongoCollectionClass.getMethod("updateOne", Class.forName("org.bson.conversions.Bson"), Class.forName("org.bson.conversions.Bson"))
-            .invoke(collection, filter, updateDoc);
+        mongoCollectionClass
+                .getMethod("updateOne", Class.forName("org.bson.conversions.Bson"),
+                        Class.forName("org.bson.conversions.Bson"))
+                .invoke(collection, filter, updateDoc);
     }
-    
+
     private boolean updateUserLocally(User updatedUser) {
         for (int i = 0; i < localUsers.size(); i++) {
             User user = localUsers.get(i);
@@ -257,7 +343,7 @@ public class UserService {
 
     public List<User> getAllUsers() {
         List<User> allUsers = new ArrayList<>();
-        
+
         if (useDatabase) {
             try {
                 allUsers = getAllUsersFromMongoDB();
@@ -268,27 +354,27 @@ public class UserService {
         } else {
             allUsers.addAll(localUsers);
         }
-        
+
         return allUsers;
     }
-    
+
     private List<User> getAllUsersFromMongoDB() throws Exception {
         List<User> users = new ArrayList<>();
-        
+
         Class<?> dbManagerClass = Class.forName("database.DatabaseManager");
         Object dbManager = dbManagerClass.getMethod("getInstance").invoke(null);
         Object database = dbManagerClass.getMethod("getDatabase").invoke(dbManager);
-        
+
         Class<?> mongoDatabaseClass = Class.forName("com.mongodb.client.MongoDatabase");
         Object collection = mongoDatabaseClass.getMethod("getCollection", String.class)
-            .invoke(database, "users");
-            
+                .invoke(database, "users");
+
         Class<?> mongoCollectionClass = Class.forName("com.mongodb.client.MongoCollection");
         Object cursor = mongoCollectionClass.getMethod("find").invoke(collection);
-        
+
         Class<?> findIterableClass = Class.forName("com.mongodb.client.FindIterable");
         Object iterator = findIterableClass.getMethod("iterator").invoke(cursor);
-        
+
         Class<?> iteratorClass = Class.forName("com.mongodb.client.MongoCursor");
         while ((Boolean) iteratorClass.getMethod("hasNext").invoke(iterator)) {
             Object doc = iteratorClass.getMethod("next").invoke(iterator);
@@ -297,7 +383,7 @@ public class UserService {
                 users.add(user);
             }
         }
-        
+
         return users;
     }
 
@@ -316,8 +402,9 @@ public class UserService {
 
     // Legacy update methods for compatibility
     public boolean updateFullName(String newFullName) {
-        if (currentUser == null) return false;
-        
+        if (currentUser == null)
+            return false;
+
         if (newFullName != null && !newFullName.trim().isEmpty()) {
             currentUser.setFullname(newFullName.trim());
             return updateUser(currentUser);
@@ -326,15 +413,17 @@ public class UserService {
     }
 
     public boolean updateAddress(String newAddress) {
-        if (currentUser == null) return false;
-        
+        if (currentUser == null)
+            return false;
+
         currentUser.setAddress(newAddress != null ? newAddress.trim() : "");
         return updateUser(currentUser);
     }
 
     public boolean updatePhoneNumber(String newPhoneNumber) {
-        if (currentUser == null) return false;
-        
+        if (currentUser == null)
+            return false;
+
         if (newPhoneNumber != null) {
             currentUser.setPhonenumber(newPhoneNumber.trim());
             return updateUser(currentUser);
@@ -343,12 +432,13 @@ public class UserService {
     }
 
     public boolean updatePassword(String currentPassword, String newPassword) {
-        if (currentUser == null) return false;
-        
+        if (currentUser == null)
+            return false;
+
         if (!verifyPassword(currentPassword, currentUser.getPassword())) {
-            return false; 
+            return false;
         }
-        
+
         if (newPassword != null && newPassword.length() >= 6) {
             currentUser.setPassword(hashPassword(newPassword));
             return updateUser(currentUser);
