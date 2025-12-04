@@ -22,7 +22,9 @@ public class RoundedBorder implements Border {
 
     @Override
     public Insets getBorderInsets(Component c) {
-        return new Insets(radius + thickness, radius + thickness, radius + thickness, radius + thickness);
+        // Use smaller insets to allow text to be visible in combo boxes
+        int inset = Math.min(10, radius / 2) + thickness;
+        return new Insets(inset, inset, inset, inset);
     }
 
     @Override
@@ -36,7 +38,7 @@ public class RoundedBorder implements Border {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setColor(color);
         g2d.setStroke(new BasicStroke(thickness));
-        g2d.drawRoundRect(x + thickness/2, y + thickness/2, width - thickness, height - thickness, radius, radius);
+        g2d.drawRoundRect(x + thickness / 2, y + thickness / 2, width - thickness, height - thickness, radius, radius);
         g2d.dispose();
     }
 }

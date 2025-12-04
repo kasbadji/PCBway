@@ -1,35 +1,27 @@
 package UI;
+
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-import java.text.DecimalFormat;
 import styles.RoundedBorder;
 import styles.RoundedButton;
 import model.PCBOrder;
-import service.CartService;
+import service.CartServiceMongo;
 
 public class PcbPrinting extends JFrame {
     private PCBOrder currentOrder;
-    private CartService cartService;
-    private DecimalFormat priceFormat;
-    
+    private CartServiceMongo cartService;
+
     // UI Components
-    private JLabel fileLabel;
     private JComboBox<String> materialCombo;
-    private JComboBox<Integer> layersCombo;
-    private JComboBox<String> surfaceFinishCombo;
-    private JComboBox<String> solderMaskCombo;
-    private JSpinner quantitySpinner;
-    private JLabel pricePerPieceLabel;
+    private JComboBox<String> layersCombo;
     private JLabel totalPriceLabel;
-    
+
     public PcbPrinting() {
         this.currentOrder = new PCBOrder();
-        this.cartService = CartService.getInstance();
-        this.priceFormat = new DecimalFormat("$0.00");
-        
+        this.cartService = CartServiceMongo.getInstance();
         setTitle("PCB Printing");
         setSize(1920, 1080);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -39,303 +31,296 @@ public class PcbPrinting extends JFrame {
         getContentPane().setBackground(Color.WHITE);
 
         add(createNavBar(), BorderLayout.NORTH);
-        
+
         // Main content
         JPanel contentPanel = new JPanel(new BorderLayout());
         contentPanel.setBackground(Color.WHITE);
-        
-        JLabel title = new JLabel("PCB Printing Services", SwingConstants.CENTER);
-        title.setFont(new Font("SansSerif", Font.BOLD, 48));
+
+        JLabel title = new JLabel("PCB PRINTING", SwingConstants.LEFT);
+        title.setFont(new Font("SansSerif", Font.BOLD, 36));
         title.setForeground(new Color(0, 100, 0));
-        title.setBorder(BorderFactory.createEmptyBorder(40, 0, 40, 0));
+        title.setBorder(BorderFactory.createEmptyBorder(40, 150, 40, 0));
         contentPanel.add(title, BorderLayout.NORTH);
-        
+
         JPanel orderFormPanel = createOrderForm();
         JScrollPane scrollPane = new JScrollPane(orderFormPanel);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setBorder(null);
         contentPanel.add(scrollPane, BorderLayout.CENTER);
-        
+
         add(contentPanel, BorderLayout.CENTER);
-        
+
         updatePriceDisplay();
     }
-    
+
     private JPanel createOrderForm() {
-        JPanel formPanel = new JPanel(new GridBagLayout());
+        JPanel formPanel = new JPanel(new BorderLayout());
         formPanel.setBackground(Color.WHITE);
-        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 100, 50, 100));
-        
+        formPanel.setBorder(BorderFactory.createEmptyBorder(80, 150, 80, 150));
+
+        // Main content panel using GridBagLayout for better control
+        JPanel mainContentPanel = new JPanel(new GridBagLayout());
+        mainContentPanel.setBackground(Color.WHITE);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(15, 15, 15, 15);
-        gbc.anchor = GridBagConstraints.WEST;
-        
-        // File Upload Section
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
-        JPanel filePanel = createFileUploadPanel();
-        formPanel.add(filePanel, gbc);
-        
-        // Specifications Section
-        gbc.gridwidth = 1; gbc.gridy = 1;
-        
-        // Material Selection
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+
+        // Left side - Preview and Upload
+        JPanel leftPanel = new JPanel(new BorderLayout(20, 20));
+        leftPanel.setBackground(Color.WHITE);
+
+        // Preview box
+        JPanel previewBox = new JPanel();
+        previewBox.setBackground(new Color(245, 245, 245)); // Lighter gray
+        previewBox.setPreferredSize(new Dimension(300, 300));
+        previewBox.setBorder(new RoundedBorder(12, new Color(220, 220, 220), 1));
+
+        // Upload button
+        RoundedButton uploadBtn = new RoundedButton("UPLOAD MODEL", 22);
+        uploadBtn.setFont(new Font("SansSerif", Font.BOLD, 15));
+        uploadBtn.setBackground(new Color(130, 210, 130)); // Light green
+        uploadBtn.setForeground(Color.WHITE);
+        uploadBtn.setHoverColor(new Color(100, 200, 100));
+        uploadBtn.setPreferredSize(new Dimension(200, 45));
+        uploadBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        uploadBtn.addActionListener(e -> uploadFile());
+
+        JPanel uploadPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        uploadPanel.setBackground(Color.WHITE);
+        uploadPanel.add(uploadBtn);
+
+        leftPanel.add(previewBox, BorderLayout.CENTER);
+        leftPanel.add(uploadPanel, BorderLayout.SOUTH);
+
         gbc.gridx = 0;
-        JLabel materialLabel = new JLabel("Material:");
-        materialLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        formPanel.add(materialLabel, gbc);
-        
-        gbc.gridx = 1;
-        materialCombo = new JComboBox<>(PCBOrder.MATERIALS);
-        materialCombo.setPreferredSize(new Dimension(200, 35));
-        materialCombo.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 0, 80);
+        mainContentPanel.add(leftPanel, gbc);
+
+        // Middle - Options panel
+        JPanel optionsPanel = new JPanel();
+        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
+        optionsPanel.setBackground(Color.WHITE);
+
+        // Material section
+        JLabel materialLabel = new JLabel("CHOOSE MATERIAL");
+        materialLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
+        materialLabel.setForeground(Color.BLACK);
+        materialLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Add empty option as first option to match the design
+        String[] materialsWithPlaceholder = new String[PCBOrder.MATERIALS.length + 1];
+        materialsWithPlaceholder[0] = "";
+        System.arraycopy(PCBOrder.MATERIALS, 0, materialsWithPlaceholder, 1, PCBOrder.MATERIALS.length);
+
+        materialCombo = new JComboBox<>(materialsWithPlaceholder);
+        materialCombo.setSelectedIndex(0); // Start with empty
+        materialCombo.setMaximumSize(new Dimension(480, 50));
+        materialCombo.setPreferredSize(new Dimension(480, 50));
+        materialCombo.setFont(new Font("SansSerif", Font.PLAIN, 15));
+        materialCombo.setBackground(Color.WHITE);
+        materialCombo.setForeground(Color.BLACK);
+        materialCombo.setBorder(new RoundedBorder(25, new Color(180, 180, 180), 2));
+        materialCombo.setAlignmentX(Component.LEFT_ALIGNMENT);
+        materialCombo.setOpaque(true);
+        materialCombo.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Set custom renderer to ensure text is visible
+        materialCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                    boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setBackground(isSelected ? new Color(200, 230, 200) : Color.WHITE);
+                setForeground(Color.BLACK);
+                setFont(new Font("SansSerif", Font.PLAIN, 15));
+                setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+                setOpaque(true);
+                return this;
+            }
+        });
+
         materialCombo.addActionListener(e -> {
-            currentOrder.setMaterial((String) materialCombo.getSelectedItem());
-            updatePriceDisplay();
+            String selected = (String) materialCombo.getSelectedItem();
+            if (selected != null && !selected.isEmpty()) {
+                currentOrder.setMaterial(selected);
+                updatePriceDisplay();
+            }
         });
-        formPanel.add(materialCombo, gbc);
-        
-        // Layer Selection
-        gbc.gridy = 2; gbc.gridx = 0;
-        JLabel layersLabel = new JLabel("Layers:");
-        layersLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        formPanel.add(layersLabel, gbc);
-        
-        gbc.gridx = 1;
-        Integer[] layerOptions = new Integer[PCBOrder.LAYER_OPTIONS.length];
+
+        // Layers section
+        JLabel layersLabel = new JLabel("CHOOSE HOW MANY LAYERS");
+        layersLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
+        layersLabel.setForeground(Color.BLACK);
+        layersLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Add empty option as first option to match the design
+        String[] layerOptionsWithPlaceholder = new String[PCBOrder.LAYER_OPTIONS.length + 1];
+        layerOptionsWithPlaceholder[0] = "";
         for (int i = 0; i < PCBOrder.LAYER_OPTIONS.length; i++) {
-            layerOptions[i] = PCBOrder.LAYER_OPTIONS[i];
+            layerOptionsWithPlaceholder[i + 1] = String.valueOf(PCBOrder.LAYER_OPTIONS[i]);
         }
-        layersCombo = new JComboBox<>(layerOptions);
-        layersCombo.setPreferredSize(new Dimension(200, 35));
-        layersCombo.setFont(new Font("SansSerif", Font.PLAIN, 14));
+
+        layersCombo = new JComboBox<>(layerOptionsWithPlaceholder);
+        layersCombo.setSelectedIndex(0); // Start with empty
+        layersCombo.setMaximumSize(new Dimension(480, 50));
+        layersCombo.setPreferredSize(new Dimension(480, 50));
+        layersCombo.setFont(new Font("SansSerif", Font.PLAIN, 15));
+        layersCombo.setBackground(Color.WHITE);
+        layersCombo.setForeground(Color.BLACK);
+        layersCombo.setBorder(new RoundedBorder(25, new Color(180, 180, 180), 2));
+        layersCombo.setAlignmentX(Component.LEFT_ALIGNMENT);
+        layersCombo.setOpaque(true);
+        layersCombo.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Set custom renderer to ensure text is visible
+        layersCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                    boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                setBackground(isSelected ? new Color(200, 230, 200) : Color.WHITE);
+                setForeground(Color.BLACK);
+                setFont(new Font("SansSerif", Font.PLAIN, 15));
+                setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+                setOpaque(true);
+                return this;
+            }
+        });
+
         layersCombo.addActionListener(e -> {
-            currentOrder.setLayers((Integer) layersCombo.getSelectedItem());
-            updatePriceDisplay();
+            String selected = (String) layersCombo.getSelectedItem();
+            if (selected != null && !selected.isEmpty()) {
+                try {
+                    currentOrder.setLayers(Integer.parseInt(selected));
+                    updatePriceDisplay();
+                } catch (NumberFormatException ex) {
+                    // Ignore invalid input
+                }
+            }
         });
-        formPanel.add(layersCombo, gbc);
-        
-        // Surface Finish
-        gbc.gridy = 3; gbc.gridx = 0;
-        JLabel surfaceLabel = new JLabel("Surface Finish:");
-        surfaceLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        formPanel.add(surfaceLabel, gbc);
-        
+
+        // Add components with spacing
+        optionsPanel.add(materialLabel);
+        optionsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        optionsPanel.add(materialCombo);
+        optionsPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        optionsPanel.add(layersLabel);
+        optionsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        optionsPanel.add(layersCombo);
+
         gbc.gridx = 1;
-        surfaceFinishCombo = new JComboBox<>(PCBOrder.SURFACE_FINISHES);
-        surfaceFinishCombo.setPreferredSize(new Dimension(200, 35));
-        surfaceFinishCombo.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        surfaceFinishCombo.addActionListener(e -> {
-            currentOrder.setSurfaceFinish((String) surfaceFinishCombo.getSelectedItem());
-            updatePriceDisplay();
-        });
-        formPanel.add(surfaceFinishCombo, gbc);
-        
-        // Solder Mask
-        gbc.gridy = 4; gbc.gridx = 0;
-        JLabel solderMaskLabel = new JLabel("Solder Mask:");
-        solderMaskLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        formPanel.add(solderMaskLabel, gbc);
-        
-        gbc.gridx = 1;
-        solderMaskCombo = new JComboBox<>(PCBOrder.SOLDER_MASK_COLORS);
-        solderMaskCombo.setPreferredSize(new Dimension(200, 35));
-        solderMaskCombo.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        solderMaskCombo.addActionListener(e -> {
-            currentOrder.setSolderMask((String) solderMaskCombo.getSelectedItem());
-        });
-        formPanel.add(solderMaskCombo, gbc);
-        
-        // Quantity
-        gbc.gridy = 5; gbc.gridx = 0;
-        JLabel quantityLabel = new JLabel("Quantity:");
-        quantityLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        formPanel.add(quantityLabel, gbc);
-        
-        gbc.gridx = 1;
-        quantitySpinner = new JSpinner(new SpinnerNumberModel(5, 1, 1000, 1));
-        quantitySpinner.setPreferredSize(new Dimension(200, 35));
-        quantitySpinner.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        quantitySpinner.addChangeListener(e -> {
-            currentOrder.setQuantity((Integer) quantitySpinner.getValue());
-            updatePriceDisplay();
-        });
-        formPanel.add(quantitySpinner, gbc);
-        
-        // Pricing Section
-        gbc.gridy = 6; gbc.gridx = 0; gbc.gridwidth = 2;
-        JPanel pricingPanel = createPricingPanel();
-        formPanel.add(pricingPanel, gbc);
-        
-        // Order Button
-        gbc.gridy = 7; gbc.gridwidth = 2;
-        JPanel buttonPanel = createButtonPanel();
-        formPanel.add(buttonPanel, gbc);
-        
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 0, 100);
+        mainContentPanel.add(optionsPanel, gbc);
+
+        // Right side - Price and Order button
+        JPanel priceOrderPanel = new JPanel();
+        priceOrderPanel.setLayout(new BoxLayout(priceOrderPanel, BoxLayout.Y_AXIS));
+        priceOrderPanel.setBackground(Color.WHITE);
+
+        // Total price label
+        JLabel totalLabel = new JLabel("TOTAL:");
+        totalLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        totalLabel.setForeground(new Color(80, 80, 80));
+        totalLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        totalPriceLabel = new JLabel("999 DA");
+        totalPriceLabel.setFont(new Font("SansSerif", Font.BOLD, 32));
+        totalPriceLabel.setForeground(new Color(34, 139, 34));
+        totalPriceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        RoundedButton orderBtn = new RoundedButton("ORDER", 22);
+        orderBtn.setFont(new Font("SansSerif", Font.BOLD, 16));
+        orderBtn.setBackground(new Color(130, 210, 130)); // Light green
+        orderBtn.setForeground(Color.WHITE);
+        orderBtn.setHoverColor(new Color(100, 200, 100));
+        orderBtn.setPreferredSize(new Dimension(150, 45));
+        orderBtn.setMaximumSize(new Dimension(150, 45));
+        orderBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        orderBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        orderBtn.addActionListener(e -> addToCart());
+
+        priceOrderPanel.add(totalLabel);
+        priceOrderPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        priceOrderPanel.add(totalPriceLabel);
+        priceOrderPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        priceOrderPanel.add(orderBtn);
+
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        mainContentPanel.add(priceOrderPanel, gbc);
+
+        formPanel.add(mainContentPanel, BorderLayout.NORTH);
+
         return formPanel;
     }
-    
-    private JPanel createFileUploadPanel() {
-        JPanel filePanel = new JPanel(new BorderLayout());
-        filePanel.setBackground(Color.WHITE);
-        filePanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(new Color(34, 139, 34), 2),
-            "Upload PCB Files",
-            0, 0, new Font("SansSerif", Font.BOLD, 18), new Color(0, 100, 0)
-        ));
-        filePanel.setPreferredSize(new Dimension(600, 120));
-        
-        JPanel contentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 20));
-        contentPanel.setBackground(Color.WHITE);
-        
-        RoundedButton uploadBtn = new RoundedButton("📁 Upload Model", 25);
-        uploadBtn.setFont(new Font("SansSerif", Font.BOLD, 16));
-        uploadBtn.setBackground(new Color(200, 255, 200));
-        uploadBtn.setForeground(new Color(0, 120, 0));
-        uploadBtn.setHoverColor(new Color(180, 240, 180));
-        uploadBtn.setPreferredSize(new Dimension(160, 45));
-        uploadBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        // Hover effect is handled by RoundedButton
-        
-        uploadBtn.addActionListener(e -> uploadFile());
-        
-        fileLabel = new JLabel("No file selected");
-        fileLabel.setFont(new Font("SansSerif", Font.ITALIC, 14));
-        fileLabel.setForeground(Color.GRAY);
-        
-        contentPanel.add(uploadBtn);
-        contentPanel.add(fileLabel);
-        
-        JTextArea infoArea = new JTextArea("Supported formats: .zip, .rar, .gerber, .gbr, .pcb, .brd");
-        infoArea.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        infoArea.setForeground(Color.GRAY);
-        infoArea.setEditable(false);
-        infoArea.setBackground(Color.WHITE);
-        
-        filePanel.add(contentPanel, BorderLayout.CENTER);
-        filePanel.add(infoArea, BorderLayout.SOUTH);
-        
-        return filePanel;
-    }
-    
-    private JPanel createPricingPanel() {
-        JPanel pricingPanel = new JPanel(new BorderLayout());
-        pricingPanel.setBackground(Color.WHITE);
-        pricingPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(new Color(34, 139, 34), 2),
-            "Pricing",
-            0, 0, new Font("SansSerif", Font.BOLD, 18), new Color(0, 100, 0)
-        ));
-        pricingPanel.setPreferredSize(new Dimension(600, 100));
-        
-        JPanel priceContentPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 20));
-        priceContentPanel.setBackground(Color.WHITE);
-        
-        pricePerPieceLabel = new JLabel("Price per piece: $0.00");
-        pricePerPieceLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
-        pricePerPieceLabel.setForeground(new Color(0, 100, 0));
-        
-        totalPriceLabel = new JLabel("Total: $0.00");
-        totalPriceLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
-        totalPriceLabel.setForeground(new Color(0, 100, 0));
-        
-        priceContentPanel.add(pricePerPieceLabel);
-        priceContentPanel.add(totalPriceLabel);
-        
-        pricingPanel.add(priceContentPanel, BorderLayout.CENTER);
-        
-        return pricingPanel;
-    }
-    
-    private JPanel createButtonPanel() {
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 20));
-        buttonPanel.setBackground(Color.WHITE);
-        
-        RoundedButton addToCartBtn = new RoundedButton("🛒 Add to Cart", 25);
-        addToCartBtn.setFont(new Font("SansSerif", Font.BOLD, 16));
-        addToCartBtn.setBackground(new Color(200, 255, 200));
-        addToCartBtn.setForeground(new Color(0, 120, 0));
-        addToCartBtn.setHoverColor(new Color(180, 240, 180));
-        addToCartBtn.setPreferredSize(new Dimension(170, 45));
-        addToCartBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
-        // Hover effect is handled by RoundedButton
-        
-        addToCartBtn.addActionListener(e -> addToCart());
-        
-        
-        
-        
-        
-        buttonPanel.add(addToCartBtn);
-        
-        return buttonPanel;
-    }
-    
+
     private void uploadFile() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Select PCB Files");
-        
+
         // Set file filters
         FileNameExtensionFilter zipFilter = new FileNameExtensionFilter("Archive files (*.zip, *.rar)", "zip", "rar");
-        FileNameExtensionFilter gerberFilter = new FileNameExtensionFilter("Gerber files (*.gerber, *.gbr)", "gerber", "gbr");
+        FileNameExtensionFilter gerberFilter = new FileNameExtensionFilter("Gerber files (*.gerber, *.gbr)", "gerber",
+                "gbr");
         FileNameExtensionFilter pcbFilter = new FileNameExtensionFilter("PCB files (*.pcb, *.brd)", "pcb", "brd");
-        
+
         fileChooser.addChoosableFileFilter(zipFilter);
         fileChooser.addChoosableFileFilter(gerberFilter);
         fileChooser.addChoosableFileFilter(pcbFilter);
         fileChooser.setFileFilter(zipFilter);
-        
+
         int result = fileChooser.showOpenDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
             currentOrder.setUploadedFile(selectedFile);
-            fileLabel.setText("📎 " + selectedFile.getName());
-            fileLabel.setForeground(new Color(0, 100, 0));
-            fileLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+            JOptionPane.showMessageDialog(this,
+                    "File uploaded: " + selectedFile.getName(),
+                    "Success",
+                    JOptionPane.INFORMATION_MESSAGE);
         }
     }
-    
+
     private void updatePriceDisplay() {
         currentOrder.calculatePrice();
-        pricePerPieceLabel.setText("Price per piece: " + priceFormat.format(currentOrder.getPricePerPiece()));
-        totalPriceLabel.setText("Total: " + priceFormat.format(currentOrder.getTotalPrice()));
+        double total = currentOrder.getTotalPrice();
+        // Convert to DA (Algerian Dinar) - using a simple conversion for display
+        int totalDA = (int) (total * 100); // Simplified conversion
+        totalPriceLabel.setText(totalDA + " DA");
     }
-    
+
     private void addToCart() {
         if (!currentOrder.isValid()) {
             JOptionPane.showMessageDialog(this,
-                "Please upload a PCB file first!",
-                "No File Selected",
-                JOptionPane.WARNING_MESSAGE);
+                    "Please upload a PCB file first!",
+                    "No File Selected",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
+
         // Create a product representation of the PCB order for the cart
         String productName = "Custom PCB - " + currentOrder.getMaterial() + " " + currentOrder.getLayers() + " Layer";
-        String description = String.format("%s, %s, %d pieces", 
-            currentOrder.getSurfaceFinish(), 
-            currentOrder.getSolderMask(), 
-            currentOrder.getQuantity());
-        
-        model.Product pcbProduct = new model.Product(
-            productName,
-            "images/pcb1.png",
-            currentOrder.getTotalPrice(),
-            description
-        );
-        
-        cartService.addToCart(pcbProduct, 1);
-        
-        JOptionPane.showMessageDialog(this,
-            "PCB order added to cart!\n" + currentOrder.getOrderSummary(),
-            "Added to Cart",
-            JOptionPane.INFORMATION_MESSAGE);
-    }
-    
+        String description = String.format("%s, %s, %d pieces",
+                currentOrder.getSurfaceFinish(),
+                currentOrder.getSolderMask(),
+                currentOrder.getQuantity());
 
-    
+        model.Product pcbProduct = new model.Product(
+                productName,
+                "images/pcb1.png",
+                currentOrder.getTotalPrice(),
+                description);
+
+        cartService.addToCart(pcbProduct, 1);
+
+        JOptionPane.showMessageDialog(this,
+                "PCB order added to cart!\n" + currentOrder.getOrderSummary(),
+                "Added to Cart",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
 
     private JPanel createNavBar() {
         JPanel header = new JPanel(new BorderLayout());
@@ -349,7 +334,7 @@ public class PcbPrinting extends JFrame {
         for (String item : navItems) {
             JLabel link = new JLabel(item);
             link.setFont(new Font("SansSerif", Font.BOLD, 16));
-            
+
             if (item.equals("PCB PRINTING")) {
                 link.setForeground(new Color(0, 100, 0));
             } else {
@@ -371,7 +356,7 @@ public class PcbPrinting extends JFrame {
                         link.setForeground(new Color(34, 139, 34));
                     }
                 }
-                
+
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     navigateToPage(item);
@@ -408,19 +393,18 @@ public class PcbPrinting extends JFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 int response = JOptionPane.showConfirmDialog(
-                    PcbPrinting.this,
-                    "Do you want to logout?",
-                    "Logout",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE
-                );
-                
+                        PcbPrinting.this,
+                        "Do you want to logout?",
+                        "Logout",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+
                 if (response == JOptionPane.YES_OPTION) {
                     SignupFrame.getUserService().logout();
                     JOptionPane.showMessageDialog(PcbPrinting.this,
-                        "You have been logged out successfully.",
-                        "Logout",
-                        JOptionPane.INFORMATION_MESSAGE);
+                            "You have been logged out successfully.",
+                            "Logout",
+                            JOptionPane.INFORMATION_MESSAGE);
                     new LoginFrame().setVisible(true);
                     dispose();
                 }
@@ -433,7 +417,7 @@ public class PcbPrinting extends JFrame {
         cartIcon.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                new CartFrame().setVisible(true);
+                new CartFrame(null).setVisible(true);
                 dispose();
             }
         });
@@ -444,10 +428,10 @@ public class PcbPrinting extends JFrame {
 
         header.add(navLinks, BorderLayout.WEST);
         header.add(rightPanel, BorderLayout.EAST);
-        
+
         return header;
     }
-    
+
     private void navigateToPage(String pageName) {
         SwingUtilities.invokeLater(() -> {
             switch (pageName) {

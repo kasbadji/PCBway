@@ -6,12 +6,12 @@ import java.awt.event.*;
 import java.text.DecimalFormat;
 import java.util.List;
 import styles.RoundedButton;
-import service.CartService;
+import service.CartServiceMongo;
 import model.CartItem;
 import model.User;
 
 public class CartFrame extends JFrame {
-    private CartService cartService;
+    private CartServiceMongo cartService;
     private DecimalFormat priceFormat;
     private JPanel cartItemsPanel;
     private JLabel subtotalLabel;
@@ -31,9 +31,8 @@ public class CartFrame extends JFrame {
 
     public CartFrame(User user) {
         this.currentUser = user;
-        this.cartService = CartService.getInstance();
+        this.cartService = CartServiceMongo.getInstance();
         this.priceFormat = new DecimalFormat("$#,##0.00");
-
         setTitle("Shopping Cart");
         setSize(1400, 900);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -360,7 +359,7 @@ public class CartFrame extends JFrame {
                 // Select this card
                 selectedCardLabel = label;
                 label.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
-                
+
                 // Set card type based on image path
                 if (imagePath.contains("MasterCard")) {
                     selectedCardType = "MasterCard";
@@ -415,9 +414,9 @@ public class CartFrame extends JFrame {
 
     private void processCheckout() {
         if (cartService.getCartItems().isEmpty()) {
-            JOptionPane.showMessageDialog(this, 
-                "Your cart is empty. Please add items before checkout.", 
-                "Cart Empty", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Your cart is empty. Please add items before checkout.",
+                    "Cart Empty", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -425,102 +424,104 @@ public class CartFrame extends JFrame {
         String cardNumber = cardNumField.getText().trim().replaceAll("\\s+", "");
 
         if (cardName.isEmpty() || isPlaceholderActive(nameField, "Name")) {
-            JOptionPane.showMessageDialog(this, 
-                "Please enter the cardholder name.", 
-                "Missing Information", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Please enter the cardholder name.",
+                    "Missing Information", JOptionPane.WARNING_MESSAGE);
             nameField.requestFocus();
             return;
         }
 
         if (cardNumber.isEmpty() || isPlaceholderActive(cardNumField, "1111 2222 3333 4444")) {
-            JOptionPane.showMessageDialog(this, 
-                "Please enter a valid card number.", 
-                "Missing Information", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Please enter a valid card number.",
+                    "Missing Information", JOptionPane.WARNING_MESSAGE);
             cardNumField.requestFocus();
             return;
         }
 
         String expDate = expField.getText().trim();
         if (expDate.isEmpty() || isPlaceholderActive(expField, "mm/yy")) {
-            JOptionPane.showMessageDialog(this, 
-                "Please enter the expiration date.", 
-                "Missing Information", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Please enter the expiration date.",
+                    "Missing Information", JOptionPane.WARNING_MESSAGE);
             expField.requestFocus();
             return;
         }
 
         String cvv = cvvField.getText().trim();
         if (cvv.isEmpty() || isPlaceholderActive(cvvField, "123")) {
-            JOptionPane.showMessageDialog(this, 
-                "Please enter the CVV code.", 
-                "Missing Information", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Please enter the CVV code.",
+                    "Missing Information", JOptionPane.WARNING_MESSAGE);
             cvvField.requestFocus();
             return;
         }
 
         if (selectedCardType == null) {
-            JOptionPane.showMessageDialog(this, 
-                "Please select a card type.", 
-                "Missing Information", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Please select a card type.",
+                    "Missing Information", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         int result = JOptionPane.showConfirmDialog(this,
-            "Proceed with checkout for " + checkoutTotalLabel.getText() + "?",
-            "Confirm Checkout", JOptionPane.YES_NO_OPTION);
-            
+                "Proceed with checkout for " + checkoutTotalLabel.getText() + "?",
+                "Confirm Checkout", JOptionPane.YES_NO_OPTION);
+
         if (result == JOptionPane.YES_OPTION) {
             try {
                 String userEmail = (currentUser != null) ? currentUser.getEmail() : "guest@pcbway.com";
-                
+
                 Object orderService = null;
                 try {
                     Class<?> orderServiceClass = Class.forName("service.OrderServiceMongo");
                     orderService = orderServiceClass.getMethod("getInstance").invoke(null);
-                    
+
                     Class<?> orderClass = Class.forName("model.Order");
-                    Object order = orderServiceClass.getMethod("createOrder", 
-                        String.class, List.class, String.class, String.class, String.class)
-                        .invoke(orderService, userEmail, cartService.getCartItems(), 
-                              cardName, selectedCardType, cardNumber);
-                    
+                    Object order = orderServiceClass.getMethod("createOrder",
+                            String.class, List.class, String.class, String.class, String.class)
+                            .invoke(orderService, userEmail, cartService.getCartItems(),
+                                    cardName, selectedCardType, cardNumber);
+
                     String orderId = (String) orderClass.getMethod("getOrderId").invoke(order);
-                    
-                    JOptionPane.showMessageDialog(this, 
-                        "Order placed successfully!\\n" +
-                        "Order ID: " + orderId + "\\n" +
-                        "Total: " + checkoutTotalLabel.getText() + "\\n" +
-                        "Payment: " + selectedCardType + " ending in " + cardNumber.substring(Math.max(0, cardNumber.length() - 4)),
-                        "Success", JOptionPane.INFORMATION_MESSAGE);
+
+                    JOptionPane.showMessageDialog(this,
+                            "Order placed successfully!\\n" +
+                                    "Order ID: " + orderId + "\\n" +
+                                    "Total: " + checkoutTotalLabel.getText() + "\\n" +
+                                    "Payment: " + selectedCardType + " ending in "
+                                    + cardNumber.substring(Math.max(0, cardNumber.length() - 4)),
+                            "Success", JOptionPane.INFORMATION_MESSAGE);
                 } catch (ClassNotFoundException e) {
                     Class<?> orderServiceClass = Class.forName("service.OrderService");
                     orderService = orderServiceClass.getMethod("getInstance").invoke(null);
-                    
+
                     Class<?> orderClass = Class.forName("model.Order");
-                    Object order = orderServiceClass.getMethod("createOrder", 
-                        String.class, List.class, String.class, String.class, String.class)
-                        .invoke(orderService, userEmail, cartService.getCartItems(), 
-                              cardName, selectedCardType, cardNumber);
-                    
+                    Object order = orderServiceClass.getMethod("createOrder",
+                            String.class, List.class, String.class, String.class, String.class)
+                            .invoke(orderService, userEmail, cartService.getCartItems(),
+                                    cardName, selectedCardType, cardNumber);
+
                     String orderId = (String) orderClass.getMethod("getOrderId").invoke(order);
-                    
-                    JOptionPane.showMessageDialog(this, 
-                        "Order placed successfully!\\n" +
-                        "Order ID: " + orderId + "\\n" +
-                        "Total: " + checkoutTotalLabel.getText() + "\\n" +
-                        "Payment: " + selectedCardType + " ending in " + cardNumber.substring(Math.max(0, cardNumber.length() - 4)),
-                        "Success", JOptionPane.INFORMATION_MESSAGE);
+
+                    JOptionPane.showMessageDialog(this,
+                            "Order placed successfully!\\n" +
+                                    "Order ID: " + orderId + "\\n" +
+                                    "Total: " + checkoutTotalLabel.getText() + "\\n" +
+                                    "Payment: " + selectedCardType + " ending in "
+                                    + cardNumber.substring(Math.max(0, cardNumber.length() - 4)),
+                            "Success", JOptionPane.INFORMATION_MESSAGE);
                 }
-                
+
                 cartService.clearCart();
                 refreshCartDisplay();
-                
+
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, 
-                    "Order placed successfully (in-memory)!\\n" +
-                    "Total: " + checkoutTotalLabel.getText(),
-                    "Success", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                        "Order placed successfully (in-memory)!\\n" +
+                                "Total: " + checkoutTotalLabel.getText(),
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
                 cartService.clearCart();
                 refreshCartDisplay();
             }
