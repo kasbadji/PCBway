@@ -3,21 +3,19 @@ package UI;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.net.URL;
-import java.net.HttpURLConnection;
-import java.io.OutputStream;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import model.ContactMessage;
 import service.ContactMessageService;
 import styles.RoundedBorder;
+import config.EmailConfig;
+import javax.mail.*;
+import javax.mail.internet.*;
+import java.util.Properties;
 
 public class ContactFrame extends JFrame {
-    
+
     public ContactFrame() {
         setTitle("Contact");
-        setSize(1920, 1080); 
+        setSize(1920, 1080);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -194,7 +192,7 @@ public class ContactFrame extends JFrame {
             // Disable button while sending
             submitButton.setEnabled(false);
             submitButton.setText("Sending...");
-            
+
             // Send email via API
             sendEmailToAPI(email, message, submitButton, nameField, surnameField, emailField, messageArea);
         });
@@ -400,107 +398,169 @@ public class ContactFrame extends JFrame {
             new ContactFrame().setVisible(true);
         });
     }
-    
-    private void sendEmailToAPI(String email, String message, JButton submitButton, 
-                               JTextField nameField, JTextField surnameField, 
-                               JTextField emailField, JTextArea messageArea) {
+
+    private void sendEmailToAPI(String email, String message, JButton submitButton,
+            JTextField nameField, JTextField surnameField,
+            JTextField emailField, JTextArea messageArea) {
         new Thread(() -> {
             try {
                 // Get form values
                 String name = nameField.getText().equals("Value") ? "" : nameField.getText();
                 String surname = surnameField.getText().equals("Value") ? "" : surnameField.getText();
-                
+
                 // Create and save contact message to database first
                 ContactMessage contactMessage = new ContactMessage(name, surname, email, message);
                 ContactMessageService contactService = ContactMessageService.getInstance();
-                
+
                 System.out.println("Saving contact message to database...");
                 boolean savedToDb = contactService.saveContactMessage(contactMessage);
-                
+
                 if (!savedToDb) {
                     SwingUtilities.invokeLater(() -> {
                         submitButton.setEnabled(true);
                         submitButton.setText("Submit");
                         JOptionPane.showMessageDialog(this,
-                            "Failed to save message to database. Please try again.",
-                            "Database Error",
-                            JOptionPane.ERROR_MESSAGE);
+                                "Failed to save message to database. Please try again.",
+                                "Database Error",
+                                JOptionPane.ERROR_MESSAGE);
                     });
                     return;
                 }
-                
-                // Create JSON payload for email API
-                String jsonPayload = String.format(
-                    "{\"email\":\"%s\",\"message\":\"%s\"}",
-                    email.replace("\"", "\\\""),
-                    message.replace("\"", "\\\"").replace("\n", "\\n")
-                );
-                
-                System.out.println("Sending email API request...");
-                System.out.println("URL: http://localhost:3000/api/email/send");
-                System.out.println("JSON Payload: " + jsonPayload);
-                
-                // Use URLConnection instead of HttpClient
-                URL url = new URL("http://localhost:3000/api/email/send");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setRequestProperty("Accept", "application/json");
-                conn.setDoOutput(true);
-                conn.setConnectTimeout(10000); // 10 seconds
-                conn.setReadTimeout(30000); // 30 seconds
-                
-                // Send JSON data
-                try (OutputStream os = conn.getOutputStream()) {
-                    byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
-                    os.write(input, 0, input.length);
-                }
-                
-                // Read response
-                int responseCode = conn.getResponseCode();
-                String responseBody = "";
-                
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(
-                        responseCode >= 200 && responseCode < 300 ? conn.getInputStream() : conn.getErrorStream(),
-                        StandardCharsets.UTF_8))) {
-                    StringBuilder response = new StringBuilder();
-                    String responseLine;
-                    while ((responseLine = br.readLine()) != null) {
-                        response.append(responseLine.trim());
+
+                // Send email using JavaMail
+                System.out.println("Sending email via SMTP...");
+                System.out.println(EmailConfig.getConfigStatus());
+
+                boolean emailSent = false;
+                String errorMessage = null;
+
+                // Check if email is enabled and configured
+                if (!EmailConfig.EMAIL_ENABLED) {
+                    System.out.println("ℹ Email disabled - message saved to database only");
+                    errorMessage = "Email sending is disabled (see EmailConfig.EMAIL_ENABLED)";
+                    emailSent = false; // Mark as not sent
+                } else if (!EmailConfig.isConfigured()) {
+                    System.out.println("⚠ Email not configured - skipping email send");
+                    errorMessage = "Email configuration needed. Update src/config/EmailConfig.java with your SMTP settings.";
+                } else {
+                    try {
+                        // Setup mail server properties with enhanced configuration
+                        Properties props = new Properties();
+                        props.put("mail.smtp.host", EmailConfig.SMTP_HOST);
+                        props.put("mail.smtp.port", EmailConfig.SMTP_PORT);
+                        props.put("mail.smtp.auth", String.valueOf(EmailConfig.SMTP_AUTH));
+                        props.put("mail.smtp.starttls.enable", String.valueOf(EmailConfig.SMTP_STARTTLS));
+                        props.put("mail.smtp.starttls.required", "false"); // Don't fail if STARTTLS unavailable
+
+                        // SSL settings
+                        if (EmailConfig.SMTP_SSL) {
+                            props.put("mail.smtp.ssl.enable", "true");
+                            props.put("mail.smtp.socketFactory.port", EmailConfig.SMTP_PORT);
+                            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+                        }
+
+                        // Timeouts
+                        props.put("mail.smtp.connectiontimeout", "10000");
+                        props.put("mail.smtp.timeout", "10000");
+                        props.put("mail.smtp.writetimeout", "10000");
+
+                        // Debug mode
+                        props.put("mail.debug", "true");
+
+                        // Create session with authentication
+                        Session session = Session.getInstance(props, new Authenticator() {
+                            @Override
+                            protected PasswordAuthentication getPasswordAuthentication() {
+                                return new PasswordAuthentication(EmailConfig.EMAIL_USERNAME,
+                                        EmailConfig.EMAIL_PASSWORD);
+                            }
+                        });
+
+                        // Create email message
+                        Message msg = new MimeMessage(session);
+                        msg.setFrom(new InternetAddress(EmailConfig.EMAIL_USERNAME, EmailConfig.EMAIL_FROM_NAME));
+                        msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(EmailConfig.RECIPIENT_EMAIL));
+                        msg.setSubject("Contact Form Submission from " + name + " " + surname);
+
+                        // Create email body
+                        String emailBody = String.format(
+                                "New Contact Form Submission\n" +
+                                        "============================\n\n" +
+                                        "Name: %s %s\n" +
+                                        "Email: %s\n" +
+                                        "Timestamp: %s\n\n" +
+                                        "Message:\n%s\n\n" +
+                                        "---\n" +
+                                        "This message was sent via PCBway Contact Form",
+                                name, surname, email,
+                                contactMessage.getFormattedTimestamp(),
+                                message);
+
+                        msg.setText(emailBody);
+
+                        // Send the email
+                        Transport.send(msg);
+                        emailSent = true;
+                        System.out.println("✓ Email sent successfully via SMTP");
+
+                    } catch (Exception e) {
+                        System.err.println("✗ Email sending failed: " + e.getMessage());
+                        e.printStackTrace();
+                        errorMessage = "Email sending failed: " + e.getMessage();
                     }
-                    responseBody = response.toString();
                 }
-                
-                System.out.println("Response received:");
-                System.out.println("Status Code: " + responseCode);
-                System.out.println("Response Body: " + responseBody);
-                
+
                 // Update email sent status in database
-                boolean emailSent = (responseCode == 200);
                 if (contactMessage.getId() != null) {
                     contactService.updateEmailSentStatus(contactMessage.getId(), emailSent);
                 }
-                
+
+                final boolean finalEmailSent = emailSent;
+                final String finalErrorMessage = errorMessage;
+
                 SwingUtilities.invokeLater(() -> {
                     submitButton.setEnabled(true);
                     submitButton.setText("Submit");
-                    
-                    if (responseCode == 200) {
-                        // Success
+
+                    if (finalEmailSent) {
+                        // Success - both database and email
                         String successMessage = String.format(
-                            "Message sent successfully!\n\n" +
-                            "✓ Saved to database at %s\n" +
-                            "✓ Email sent to API\n" +
-                            "✓ Contact: %s %s (%s)",
-                            contactMessage.getFormattedTimestamp(),
-                            name, surname, email
-                        );
-                        
+                                "Message sent successfully!\n\n" +
+                                        "✓ Saved to database at %s\n" +
+                                        "✓ Email sent via SMTP\n" +
+                                        "✓ Contact: %s %s (%s)",
+                                contactMessage.getFormattedTimestamp(),
+                                name, surname, email);
+
                         JOptionPane.showMessageDialog(this,
-                            successMessage,
-                            "Success",
-                            JOptionPane.INFORMATION_MESSAGE);
-                        
+                                successMessage,
+                                "Success",
+                                JOptionPane.INFORMATION_MESSAGE);
+
+                        // Reset form
+                        nameField.setText("Value");
+                        nameField.setForeground(Color.LIGHT_GRAY);
+                        surnameField.setText("Value");
+                        surnameField.setForeground(Color.LIGHT_GRAY);
+                        emailField.setText("Value");
+                        emailField.setForeground(Color.LIGHT_GRAY);
+                        messageArea.setText("Value");
+                        messageArea.setForeground(Color.LIGHT_GRAY);
+                    } else if (!EmailConfig.EMAIL_ENABLED) {
+                        // Database saved, email disabled
+                        String successMessage = String.format(
+                                "Message saved successfully!\n\n" +
+                                        "✓ Saved to database at %s\n" +
+                                        "ℹ Email sending is disabled\n" +
+                                        "Contact: %s %s (%s)",
+                                contactMessage.getFormattedTimestamp(),
+                                name, surname, email);
+
+                        JOptionPane.showMessageDialog(this,
+                                successMessage,
+                                "Success",
+                                JOptionPane.INFORMATION_MESSAGE);
+
                         // Reset form
                         nameField.setText("Value");
                         nameField.setForeground(Color.LIGHT_GRAY);
@@ -511,36 +571,35 @@ public class ContactFrame extends JFrame {
                         messageArea.setText("Value");
                         messageArea.setForeground(Color.LIGHT_GRAY);
                     } else {
-                        // API error but message was saved to database
-                        String errorMessage = String.format(
-                            "Message saved to database but email sending failed.\n\n" +
-                            "✓ Saved to database at %s\n" +
-                            "✗ Email API error (Code: %d)\n" +
-                            "Contact: %s %s (%s)",
-                            contactMessage.getFormattedTimestamp(),
-                            responseCode,
-                            name, surname, email
-                        );
-                        
+                        // Database saved but email failed
+                        String partialMessage = String.format(
+                                "Message saved to database but email sending failed.\n\n" +
+                                        "✓ Saved to database at %s\n" +
+                                        "✗ Email error: %s\n" +
+                                        "Contact: %s %s (%s)",
+                                contactMessage.getFormattedTimestamp(),
+                                finalErrorMessage,
+                                name, surname, email);
+
                         JOptionPane.showMessageDialog(this,
-                            errorMessage,
-                            "Partial Success",
-                            JOptionPane.WARNING_MESSAGE);
+                                partialMessage,
+                                "Partial Success",
+                                JOptionPane.WARNING_MESSAGE);
                     }
                 });
-                
+
             } catch (Exception e) {
-                System.out.println("Exception in HTTP request: " + e.getMessage());
+                System.out.println("Exception in contact form submission: " + e.getMessage());
                 e.printStackTrace();
-                
+
                 SwingUtilities.invokeLater(() -> {
                     submitButton.setEnabled(true);
                     submitButton.setText("Submit");
-                    
+
                     JOptionPane.showMessageDialog(this,
-                        "Failed to send message. Error: " + e.getMessage(),
-                        "Connection Error",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Failed to send message. Error: " + e.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
                 });
             }
         }).start();

@@ -72,11 +72,11 @@ public class ProfileFrame extends JFrame {
         headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
         // Back button
-        RoundedButton backButton = new RoundedButton("← Back to Shop", 10);
+        RoundedButton backButton = new RoundedButton("← Back", 10);
         backButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         backButton.setBackground(Color.WHITE);
         backButton.setForeground(new Color(34, 139, 34));
-        backButton.setPreferredSize(new Dimension(150, 40));
+        backButton.setPreferredSize(new Dimension(180, 40));
         backButton.addActionListener(e -> {
             new ElectronicsFrame().setVisible(true);
             dispose();
@@ -169,7 +169,7 @@ public class ProfileFrame extends JFrame {
         saveButton.setFont(new Font("SansSerif", Font.BOLD, 16));
         saveButton.setBackground(new Color(34, 139, 34));
         saveButton.setForeground(Color.WHITE);
-        saveButton.setPreferredSize(new Dimension(150, 45));
+        saveButton.setPreferredSize(new Dimension(180, 45));
         saveButton.addActionListener(e -> saveUserData());
         panel.add(saveButton, gbc);
 
@@ -467,7 +467,7 @@ public class ProfileFrame extends JFrame {
         viewButton.setFont(new Font("SansSerif", Font.PLAIN, 12));
         viewButton.setBackground(new Color(34, 139, 34));
         viewButton.setForeground(Color.WHITE);
-        viewButton.setPreferredSize(new Dimension(100, 35));
+        viewButton.setPreferredSize(new Dimension(120, 35));
         viewButton.addActionListener(e -> viewOrderDetails(order));
 
         rightPanel.add(totalLabel);
