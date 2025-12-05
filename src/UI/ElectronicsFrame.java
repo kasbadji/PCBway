@@ -223,29 +223,30 @@ public class ElectronicsFrame extends JFrame {
             searchProducts(query);
         });
 
-        JLabel userIcon = new JLabel("👤");
-        userIcon.setFont(new Font("SansSerif", Font.PLAIN, 24));
-        userIcon.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        userIcon.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                int response = JOptionPane.showConfirmDialog(
-                    ElectronicsFrame.this,
-                    "Do you want to logout?",
+        RoundedButton logoutButton = new RoundedButton("Logout", 20);
+        logoutButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        logoutButton.setForeground(Color.WHITE);
+        logoutButton.setBackground(new Color(220, 53, 69));
+        logoutButton.setHoverColor(new Color(200, 35, 51));
+        logoutButton.setPreferredSize(new Dimension(90, 35));
+        logoutButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        logoutButton.addActionListener(e -> {
+            int response = JOptionPane.showConfirmDialog(
+                ElectronicsFrame.this,
+                "Do you want to logout?",
+                "Logout",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            );
+            
+            if (response == JOptionPane.YES_OPTION) {
+                SignupFrame.getUserService().logout();
+                JOptionPane.showMessageDialog(ElectronicsFrame.this,
+                    "You have been logged out successfully.",
                     "Logout",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE
-                );
-                
-                if (response == JOptionPane.YES_OPTION) {
-                    SignupFrame.getUserService().logout();
-                    JOptionPane.showMessageDialog(ElectronicsFrame.this,
-                        "You have been logged out successfully.",
-                        "Logout",
-                        JOptionPane.INFORMATION_MESSAGE);
-                    new LoginFrame().setVisible(true);
-                    dispose();
-                }
+                    JOptionPane.INFORMATION_MESSAGE);
+                new LoginFrame().setVisible(true);
+                dispose();
             }
         });
 
@@ -304,7 +305,7 @@ public class ElectronicsFrame extends JFrame {
         });
 
         rightPanel.add(searchField);
-        rightPanel.add(userIcon);
+        rightPanel.add(logoutButton);
         rightPanel.add(profileIcon);
         rightPanel.add(cartCountLabel);
 

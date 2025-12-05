@@ -91,7 +91,7 @@ public class OrderServiceMongo {
         documentClass.getMethod("put", Object.class, Object.class)
             .invoke(orderDoc, "total", order.getTotal());
         documentClass.getMethod("put", Object.class, Object.class)
-            .invoke(orderDoc, "orderDate", order.getOrderDate().toString());
+            .invoke(orderDoc, "orderDate", order.getOrderDate());
         documentClass.getMethod("put", Object.class, Object.class)
             .invoke(orderDoc, "status", order.getStatus());
         
@@ -223,6 +223,22 @@ public class OrderServiceMongo {
             Order order = new Order(userEmail, cartItems);
             if (orderId != null) order.setOrderId(orderId);
             if (status != null) order.setStatus(status);
+            
+            // Parse and set order date from database
+            Object orderDateObj = documentClass.getMethod("get", Object.class).invoke(doc, "orderDate");
+            if (orderDateObj != null) {
+                if (orderDateObj instanceof java.util.Date) {
+                    order.setOrderDate((java.util.Date) orderDateObj);
+                } else if (orderDateObj instanceof String) {
+                    // Fallback for old string format
+                    try {
+                        java.util.Date parsedDate = new java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", java.util.Locale.ENGLISH).parse((String) orderDateObj);
+                        order.setOrderDate(parsedDate);
+                    } catch (Exception e) {
+                        System.err.println("Error parsing order date string: " + e.getMessage());
+                    }
+                }
+            }
             
             // Set financial data if available
             if (subtotal != null && shipping != null && total != null) {

@@ -5,6 +5,7 @@ import styles.RoundedBorder;
 import styles.RoundedButton;
 import service.UserService;
 import model.User;
+import config.UserPreferences;
 import java.awt.*;
 
 public class LoginFrame extends JFrame {
@@ -91,6 +92,15 @@ public class LoginFrame extends JFrame {
         JCheckBox rememberMe = new JCheckBox("Remember me");
         rememberMe.setBackground(Color.WHITE);
         rememberMe.setFocusPainted(false);
+        
+        // Load remembered email if exists
+        if (UserPreferences.shouldRememberUser()) {
+            String rememberedEmail = UserPreferences.getRememberedEmail();
+            if (!rememberedEmail.isEmpty()) {
+                emailField.setText(rememberedEmail);
+                rememberMe.setSelected(true);
+            }
+        }
 
         RoundedButton registerBtn = new RoundedButton("Login", 25);
         registerBtn.setBackground(new Color(200, 255, 200));
@@ -118,6 +128,13 @@ public class LoginFrame extends JFrame {
 
             if (loginSuccess) {
                 User user = userService.getCurrentUser();
+                
+                // Handle Remember Me
+                if (rememberMe.isSelected()) {
+                    UserPreferences.saveRememberedEmail(email);
+                } else {
+                    UserPreferences.clearRememberedEmail();
+                }
 
                 // Set user in CartService for persistence
                 try {

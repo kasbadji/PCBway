@@ -4,10 +4,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import styles.RoundedBorder;
+import styles.RoundedButton;
+import service.CartServiceMongo;
 
 public class ServicesFrame extends JFrame {
+    private CartServiceMongo cartService;
+    private JLabel cartCountLabel;
 
     public ServicesFrame() {
+        this.cartService = CartServiceMongo.getInstance();
         setTitle("Services");
         setSize(1920, 1080);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -73,46 +78,91 @@ public class ServicesFrame extends JFrame {
         searchField.setBorder(new RoundedBorder(20, new Color(34, 139, 34), 2));
         searchField.setPreferredSize(new Dimension(200, 35));
 
-        JLabel userIcon = new JLabel("👤");
-        userIcon.setFont(new Font("SansSerif", Font.PLAIN, 24));
-        userIcon.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        userIcon.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                int response = JOptionPane.showConfirmDialog(
-                    ServicesFrame.this,
-                    "Do you want to logout?",
+        RoundedButton logoutButton = new RoundedButton("Logout", 20);
+        logoutButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        logoutButton.setForeground(Color.WHITE);
+        logoutButton.setBackground(new Color(220, 53, 69));
+        logoutButton.setHoverColor(new Color(200, 35, 51));
+        logoutButton.setPreferredSize(new Dimension(90, 35));
+        logoutButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        logoutButton.addActionListener(e -> {
+            int response = JOptionPane.showConfirmDialog(
+                ServicesFrame.this,
+                "Do you want to logout?",
+                "Logout",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            );
+            
+            if (response == JOptionPane.YES_OPTION) {
+                SignupFrame.getUserService().logout();
+                JOptionPane.showMessageDialog(ServicesFrame.this,
+                    "You have been logged out successfully.",
                     "Logout",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE
-                );
-                
-                if (response == JOptionPane.YES_OPTION) {
-                    SignupFrame.getUserService().logout();
-                    JOptionPane.showMessageDialog(ServicesFrame.this,
-                        "You have been logged out successfully.",
-                        "Logout",
-                        JOptionPane.INFORMATION_MESSAGE);
-                    new LoginFrame().setVisible(true);
-                    dispose();
-                }
-            }
-        });
-
-        JLabel cartIcon = new JLabel("🛒");
-        cartIcon.setFont(new Font("SansSerif", Font.PLAIN, 24));
-        cartIcon.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        cartIcon.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                new CartFrame().setVisible(true);
+                    JOptionPane.INFORMATION_MESSAGE);
+                new LoginFrame().setVisible(true);
                 dispose();
             }
         });
 
+        // Profile button
+        JLabel profileIcon = new JLabel("👤 Profile");
+        profileIcon.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        profileIcon.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        profileIcon.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (SignupFrame.getUserService().isLoggedIn()) {
+                    new ProfileFrame(SignupFrame.getUserService().getCurrentUser()).setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(ServicesFrame.this,
+                        "Please login to access your profile.",
+                        "Login Required",
+                        JOptionPane.WARNING_MESSAGE);
+                    new LoginFrame().setVisible(true);
+                }
+            }
+            
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                profileIcon.setForeground(new Color(0, 100, 0));
+            }
+            
+            @Override
+            public void mouseExited(MouseEvent e) {
+                profileIcon.setForeground(Color.BLACK);
+            }
+        });
+
+        cartCountLabel = new JLabel("🛒(0)");
+        cartCountLabel.setFont(new Font("SansSerif", Font.PLAIN, 18));
+        cartCountLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        cartCountLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (SignupFrame.getUserService().isLoggedIn()) {
+                    new CartFrame(SignupFrame.getUserService().getCurrentUser()).setVisible(true);
+                } else {
+                    new CartFrame().setVisible(true);
+                }
+                dispose();
+            }
+            
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                cartCountLabel.setForeground(new Color(0, 100, 0));
+            }
+            
+            @Override
+            public void mouseExited(MouseEvent e) {
+                cartCountLabel.setForeground(Color.BLACK);
+            }
+        });
+
         rightPanel.add(searchField);
-        rightPanel.add(userIcon);
-        rightPanel.add(cartIcon);
+        rightPanel.add(logoutButton);
+        rightPanel.add(profileIcon);
+        rightPanel.add(cartCountLabel);
 
         header.add(navPanel, BorderLayout.WEST);
         header.add(rightPanel, BorderLayout.EAST);
@@ -142,6 +192,15 @@ public class ServicesFrame extends JFrame {
         servicesPanel.add(elecCard, gbc);
         contentPanel.add(servicesPanel, BorderLayout.CENTER);
         add(contentPanel, BorderLayout.CENTER);
+        
+        updateCartDisplay();
+    }
+
+    private void updateCartDisplay() {
+        if (cartCountLabel != null) {
+            int itemCount = cartService.getTotalItemCount();
+            cartCountLabel.setText("🛒(" + itemCount + ")");
+        }
     }
 
     private void navigateToPage(String pageName) {
