@@ -22,14 +22,14 @@ public class ServicesFrame extends JFrame {
         header.setBorder(BorderFactory.createEmptyBorder(15, 80, 15, 80));
 
         // --- Navigation Links
-        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 35, 0));
+        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 50, 0));
         navPanel.setBackground(Color.WHITE);
 
         String[] navItems = { "SERVICES", "PCB PRINTING", "ELECTRONICS", "CONTACT" };
         for (String item : navItems) {
             JLabel link = new JLabel(item);
-            link.setFont(new Font("SansSerif", Font.BOLD, 16));
-            link.setForeground(new Color(34, 139, 34));
+            link.setFont(new Font("SansSerif", Font.BOLD, 20));
+            link.setForeground(new Color(2, 158, 54));
 
             link.addMouseListener(new MouseAdapter() {
                 @Override
@@ -40,7 +40,7 @@ public class ServicesFrame extends JFrame {
 
                 @Override
                 public void mouseExited(MouseEvent e) {
-                    link.setForeground(new Color(34, 139, 34));
+                    link.setForeground(new Color(2, 158, 54));
                 }
                 
                 @Override
@@ -125,7 +125,7 @@ public class ServicesFrame extends JFrame {
         JLabel title = new JLabel("Our Services", SwingConstants.CENTER);
         title.setFont(new Font("SansSerif", Font.BOLD, 48));
         title.setForeground(new Color(0, 100, 0));
-        title.setBorder(BorderFactory.createEmptyBorder(80, 0, 60, 0));
+        title.setBorder(BorderFactory.createEmptyBorder(80, 0, 20, 0));
         contentPanel.add(title, BorderLayout.NORTH);
         // --- Services section
         JPanel servicesPanel = new JPanel(new GridBagLayout());

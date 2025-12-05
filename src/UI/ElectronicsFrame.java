@@ -7,20 +7,20 @@ import java.util.List;
 import styles.RoundedBorder;
 import styles.RoundedButton;
 import service.ProductService;
-import service.CartService;
+import service.CartServiceMongo;
 import service.UserService;
 import model.Product;
 
 public class ElectronicsFrame extends JFrame {
     private ProductService productService;
-    private CartService cartService;
+    private CartServiceMongo cartService;
     private DecimalFormat priceFormat;
     private JPanel productsPanel;
     private JLabel cartCountLabel;
     
     public ElectronicsFrame() {
         this.productService = ProductService.getInstance();
-        this.cartService = CartService.getInstance();
+        this.cartService = CartServiceMongo.getInstance();
         this.priceFormat = new DecimalFormat("$0.00");
         
         setTitle("Electronics");
@@ -157,19 +157,19 @@ public class ElectronicsFrame extends JFrame {
         header.setBorder(BorderFactory.createEmptyBorder(15, 80, 15, 80));
 
         // Navigation Links
-        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 35, 0));
+        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 50, 0));
         navPanel.setBackground(Color.WHITE);
 
         String[] navItems = { "SERVICES", "PCB PRINTING", "ELECTRONICS", "CONTACT" };
         for (String item : navItems) {
             JLabel link = new JLabel(item);
-            link.setFont(new Font("SansSerif", Font.BOLD, 16));
+            link.setFont(new Font("SansSerif", Font.BOLD, 20));
             
             // Highlight current page
             if (item.equals("ELECTRONICS")) {
                 link.setForeground(new Color(0, 100, 0));
             } else {
-                link.setForeground(new Color(34, 139, 34));
+                link.setForeground(new Color(2, 158, 54));
             }
 
             link.addMouseListener(new MouseAdapter() {
@@ -184,7 +184,7 @@ public class ElectronicsFrame extends JFrame {
                     if (item.equals("ELECTRONICS")) {
                         link.setForeground(new Color(0, 100, 0));
                     } else {
-                        link.setForeground(new Color(34, 139, 34));
+                        link.setForeground(new Color(2, 158, 54));
                     }
                 }
                 

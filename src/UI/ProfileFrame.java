@@ -19,6 +19,8 @@ public class ProfileFrame extends JFrame {
     private JTextField nameField, emailField, phoneField, addressField;
     private JPanel orderHistoryPanel;
     private JPanel savedCardsPanel;
+    private JTabbedPane tabbedPane;
+    private JLabel[] menuLabels;
 
     public ProfileFrame(User user) {
         this.currentUser = user;
@@ -42,14 +44,16 @@ public class ProfileFrame extends JFrame {
     }
 
     private void createLayout() {
-        // Header panel
+        // Header panel (sidebar)
         JPanel headerPanel = createHeaderPanel();
-        add(headerPanel, BorderLayout.NORTH);
+        add(headerPanel, BorderLayout.WEST);
 
         // Main content with tabs
-        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("SansSerif", Font.BOLD, 14));
         tabbedPane.setBackground(Color.WHITE);
+        tabbedPane.setTabPlacement(JTabbedPane.TOP);
+        tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 
         // Personal Information Tab
         JPanel personalInfoPanel = createPersonalInfoPanel();
@@ -63,35 +67,159 @@ public class ProfileFrame extends JFrame {
         JPanel billingPanel = createBillingPanel();
         tabbedPane.addTab("Billing & Payment", billingPanel);
 
+        // Hide the tab bar
+        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+            tabbedPane.setTabComponentAt(i, new JLabel());
+        }
+        tabbedPane.setUI(new javax.swing.plaf.basic.BasicTabbedPaneUI() {
+            @Override
+            protected int calculateTabAreaHeight(int tabPlacement, int horizRunCount, int maxTabHeight) {
+                return 0;
+            }
+        });
+
         add(tabbedPane, BorderLayout.CENTER);
     }
 
     private JPanel createHeaderPanel() {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(new Color(34, 139, 34));
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        headerPanel.setPreferredSize(new Dimension(280, 800));
 
-        // Back button
+        // Main content panel with vertical layout
+        JPanel contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        contentPanel.setBackground(new Color(34, 139, 34));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 30, 20));
+
+        // Back button at top
         RoundedButton backButton = new RoundedButton("← Back", 10);
         backButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         backButton.setBackground(Color.WHITE);
         backButton.setForeground(new Color(34, 139, 34));
-        backButton.setPreferredSize(new Dimension(180, 40));
+        backButton.setMaximumSize(new Dimension(100, 35));
+        backButton.setAlignmentX(Component.LEFT_ALIGNMENT);
         backButton.addActionListener(e -> {
             new ElectronicsFrame().setVisible(true);
             dispose();
         });
 
-        // Profile title
-        JLabel titleLabel = new JLabel("User Profile");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
-        titleLabel.setForeground(Color.WHITE);
-        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        // User name
+        String displayName = currentUser != null && currentUser.getFullname() != null 
+            ? currentUser.getFullname() 
+            : "User Name";
+        JLabel nameLabel = new JLabel(displayName);
+        nameLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        nameLabel.setForeground(Color.WHITE);
+        nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        headerPanel.add(backButton, BorderLayout.WEST);
-        headerPanel.add(titleLabel, BorderLayout.CENTER);
+        // User icon - using two circles to represent head and body
+        JPanel iconPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.WHITE);
+                
+                // Draw head (circle)
+                g2.fillOval(25, 10, 30, 30);
+                
+                // Draw body (larger circle/oval)
+                g2.fillOval(15, 35, 50, 45);
+            }
+        };
+        iconPanel.setPreferredSize(new Dimension(80, 80));
+        iconPanel.setMaximumSize(new Dimension(80, 80));
+        iconPanel.setBackground(new Color(34, 139, 34));
+        iconPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Menu items panel
+        JPanel menuPanel = new JPanel();
+        menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
+        menuPanel.setBackground(new Color(34, 139, 34));
+        menuPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        menuPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        String[] menuItems = {"Personal Information", "Order History", "Billing & Payment"};
+        menuLabels = new JLabel[menuItems.length];
+        
+        for (int i = 0; i < menuItems.length; i++) {
+            final int index = i;
+            JPanel itemPanel = new JPanel(new BorderLayout());
+            itemPanel.setBackground(new Color(34, 139, 34));
+            itemPanel.setMaximumSize(new Dimension(260, 45));
+            itemPanel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            
+            JLabel menuLabel = new JLabel(menuItems[i]);
+            menuLabel.setFont(new Font("SansSerif", Font.PLAIN, 15));
+            menuLabel.setForeground(Color.WHITE);
+            menuLabel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+            
+            menuLabels[i] = menuLabel;
+            
+            // Add click listener
+            itemPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    switchToTab(index);
+                }
+                
+                public void mouseEntered(java.awt.event.MouseEvent evt) {
+                    itemPanel.setBackground(new Color(28, 120, 28));
+                }
+                
+                public void mouseExited(java.awt.event.MouseEvent evt) {
+                    itemPanel.setBackground(new Color(34, 139, 34));
+                }
+            });
+            
+            itemPanel.add(menuLabel, BorderLayout.CENTER);
+            menuPanel.add(itemPanel);
+            
+            // Add spacing between items (except after the last item)
+            if (i < menuItems.length - 1) {
+                menuPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            }
+        }
+        
+        // Highlight first item by default
+        updateMenuSelection(0);
+
+        // Add components with spacing
+        contentPanel.add(backButton);
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        contentPanel.add(nameLabel);
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        contentPanel.add(iconPanel);
+        contentPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        contentPanel.add(menuPanel);
+        contentPanel.add(Box.createVerticalGlue());
+
+        headerPanel.add(contentPanel, BorderLayout.CENTER);
 
         return headerPanel;
+    }
+    
+    private void switchToTab(int index) {
+        tabbedPane.setSelectedIndex(index);
+        updateMenuSelection(index);
+    }
+    
+    private void updateMenuSelection(int selectedIndex) {
+        for (int i = 0; i < menuLabels.length; i++) {
+            if (i == selectedIndex) {
+                menuLabels[i].setText("<html><u>" + getMenuItemText(i) + "</u></html>");
+                menuLabels[i].setFont(new Font("SansSerif", Font.BOLD, 20));
+            } else {
+                menuLabels[i].setText(getMenuItemText(i));
+                menuLabels[i].setFont(new Font("SansSerif", Font.PLAIN, 20));
+            }
+        }
+    }
+    
+    private String getMenuItemText(int index) {
+        String[] menuItems = {"Personal Information", "Order History", "Billing & Payment"};
+        return menuItems[index];
     }
 
     private JPanel createPersonalInfoPanel() {

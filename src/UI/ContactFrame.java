@@ -263,18 +263,18 @@ public class ContactFrame extends JFrame {
         header.setBorder(BorderFactory.createEmptyBorder(20, 100, 20, 100));
 
         // Navigation Links
-        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 40, 0));
+        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 50, 0));
         navPanel.setBackground(Color.WHITE);
 
         String[] navItems = { "SERVICES", "PCB PRINTING", "ELECTRONICS", "CONTACT" };
         for (String item : navItems) {
             JLabel link = new JLabel(item);
-            link.setFont(new Font("SansSerif", Font.BOLD, 14));
+            link.setFont(new Font("SansSerif", Font.BOLD, 20));
 
             if (item.equals("CONTACT")) {
                 link.setForeground(new Color(0, 100, 0));
             } else {
-                link.setForeground(new Color(34, 139, 34));
+                link.setForeground(new Color(2, 158, 54));
             }
 
             link.addMouseListener(new MouseAdapter() {
@@ -289,7 +289,7 @@ public class ContactFrame extends JFrame {
                     if (item.equals("CONTACT")) {
                         link.setForeground(new Color(0, 100, 0));
                     } else {
-                        link.setForeground(new Color(34, 139, 34));
+                        link.setForeground(new Color(2, 158, 54));
                     }
                 }
 

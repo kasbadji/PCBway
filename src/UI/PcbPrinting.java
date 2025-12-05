@@ -327,18 +327,18 @@ public class PcbPrinting extends JFrame {
         header.setBackground(Color.WHITE);
         header.setBorder(BorderFactory.createEmptyBorder(15, 80, 15, 80));
 
-        JPanel navLinks = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 0));
+        JPanel navLinks = new JPanel(new FlowLayout(FlowLayout.LEFT, 50, 0));
         navLinks.setBackground(Color.WHITE);
 
         String[] navItems = { "SERVICES", "PCB PRINTING", "ELECTRONICS", "CONTACT" };
         for (String item : navItems) {
             JLabel link = new JLabel(item);
-            link.setFont(new Font("SansSerif", Font.BOLD, 16));
+            link.setFont(new Font("SansSerif", Font.BOLD, 20));
 
             if (item.equals("PCB PRINTING")) {
                 link.setForeground(new Color(0, 100, 0));
             } else {
-                link.setForeground(new Color(34, 139, 34));
+                link.setForeground(new Color(2, 158, 54));
             }
 
             link.addMouseListener(new MouseAdapter() {
@@ -353,7 +353,7 @@ public class PcbPrinting extends JFrame {
                     if (item.equals("PCB PRINTING")) {
                         link.setForeground(new Color(0, 100, 0));
                     } else {
-                        link.setForeground(new Color(34, 139, 34));
+                        link.setForeground(new Color(2, 158, 54));
                     }
                 }
 
